@@ -53,13 +53,15 @@ flowchart LR
 
 **Didáctico:** el backend hace de "doble" del core bancario de la fintech. En producción no reescribiría su sistema de créditos; construiría esta capa de integración encima de sus APIs.
 
+El [`README.md`](../../README.md) de la raíz del repo explica estas tres piezas (el cliente, la integración y el agente) con una tabla de quién decide qué y el recorrido de una llamada. Sirve como apoyo visual para el bloque técnico del video.
+
 ---
 
 ## 4. Lo que se construyó, pieza por pieza
 
 ### 4.1 Base de datos (Supabase / Postgres)
 
-**Proyecto:** `avanza-cobranza` (`thebjscyzczyghbuqtvz`, us-east-1). Cuatro migraciones en `supabase/migrations/`.
+**Proyecto:** `avanza-cobranza` (`thebjscyzczyghbuqtvz`, us-east-1). Ocho migraciones en `supabase/migrations/`: esquema, semilla, agentes por tenant, `search_path` fijo, rol de la consola, sentimiento, Telegram por defecto y clientes ficticios.
 
 **Tablas** (todas en el esquema privado `cobranza`, todas con `tenant_id`):
 
@@ -96,6 +98,10 @@ flowchart LR
 
 Clientes de prueba: **Laura** (Avanza, cédula terminada en 4417, nacida el 14/05/1990, $1.200.000 vencidos, 21 días de mora), Carlos, Marta, y **Andrés** en Nexo, con **la misma identidad que Laura**. Eso es a propósito: prueba que la misma cédula en dos fintechs no cruza datos.
 
+**Clientes al azar:** el botón "Agregar cliente al azar" de la consola crea más clientes ficticios, con nombre, cédula, nacimiento, producto, mora, días y saldo aleatorios.
+- **Por qué no rompe el modelo de seguridad:** la consola sigue siendo de solo lectura. El backend llama, como `cobranza_app` y dentro de un solo tenant, a la función `create_demo_customer`, que solo puede **agregar** una persona y una cuenta a esa fintech. No modifica ni borra nada.
+- **Reglas de la función:** hay un tope de 40 cuentas por fintech. Los últimos 4 de la cédula más la fecha de nacimiento no se repiten dentro de la fintech, porque son la llave de la verificación. El cliente nuevo hereda el chat de Telegram de la demo.
+
 ### 4.2 Backend (FastAPI, en Railway)
 
 Separado como pide el spec:
@@ -119,8 +125,11 @@ Separado como pide el spec:
 **Endpoints internos** (no son herramientas):
 
 - `POST /webhooks/post-call`: ElevenLabs avisa al final de cada llamada con los datos recolectados. Se verifica la firma HMAC.
-- `GET /compliance/contact-window`: antes de una llamada saliente, ¿la ley lo permite ahora?
+- `GET /compliance/contact-window`: antes de una llamada saliente, ¿la ley lo permite ahora? Acepta `at` para evaluar cualquier fecha (por ejemplo, un domingo).
 - `GET` y `POST /pay/{token}`: página de pago simulada, en HTML semántico.
+- `GET /console/...` y `POST /console/{tenant}/customers`: la consola de la fintech (lectura, y crear un cliente ficticio).
+
+**La Ley 2300 aplica a lo que la empresa inicia.** Llamadas y mensajes salientes de cobranza. Si el cliente llama o abre la consola a las 11 p.m. o un domingo, nada se bloquea, y así debe ser. El link de Telegram tampoco pasa por la ventana: se envía dentro de una llamada que el cliente inició y porque lo aceptó. `contact-window` es la puerta que usaría una campaña saliente; el sistema todavía no hace llamadas salientes.
 
 **Las reglas que viven en código y no en el prompt (y por qué):**
 
@@ -136,7 +145,7 @@ Separado como pide el spec:
 
 **Autenticación de cada fintech:** cada agente manda `X-Tenant-Key`, una llave guardada como secreto del workspace de ElevenLabs. El backend la convierte en hash SHA-256 y la busca; la base nunca ve la llave original. También manda `X-Tenant-Id`; si no coincide con la llave, se rechaza y queda en la bitácora.
 
-**Adaptador de canal:** `send_payment_link` no sabe si el mensaje sale por WhatsApp o Telegram. Cada fintech tiene un campo `channel`, y cambiar de canal es cambiar ese valor. Las dos usan Telegram: WhatsApp exige una plantilla de utilidad aprobada por Meta porque la empresa escribe primero, y eso no cabía en el plazo. Con `CHANNEL_MODE=log`, el link se imprime en los logs en vez de enviarse; así corren las pruebas.
+**Adaptador de canal:** `send_payment_link` no sabe si el mensaje sale por WhatsApp o Telegram. Cada fintech tiene un campo `channel`, y cambiar de canal es cambiar ese valor. Las dos usan Telegram (es el valor por defecto de la tabla `tenants`): WhatsApp exige una plantilla de utilidad aprobada por Meta porque la empresa escribe primero, y eso no cabía en el plazo. En producción corre con `CHANNEL_MODE=live` y el link llega de verdad a Telegram. Con `CHANNEL_MODE=log`, el link se imprime en los logs en vez de enviarse; así corren las pruebas.
 
 ### 4.3 El agente como código
 
@@ -204,7 +213,8 @@ El agente no se configuró a mano en el dashboard: está en archivos JSON dentro
 | --- | --- | --- |
 | **Backend (pytest), 29 pruebas** contra el Supabase real | Camino ideal; sesión obligatoria; bloqueo por intentos; validación; plan inventado o ajeno; conflicto de idempotencia; aislamiento entre fintechs; RLS directo en Postgres; disputa; opt-out (vinculado, no vinculado y de otra fintech); callback; ventana Ley 2300; firma del webhook; política y festivos | 29/29 |
 | **Batería del agente en ElevenLabs, 11 pruebas × 2 agentes** | Camino ideal; pedir la cuenta sin verificar; identidad falla; contesta un tercero; descuento del 90%; inyección de prompt; perdió el trabajo; disputa; "no me llamen"; backend caído; cambio a inglés | Última corrida completa: 21/22. Tras el último ajuste del guardrail, 10/10 en las pruebas que lo tocan |
-| **Conversación real** (`agents.py chat`, texto por WebSocket, sin mocks) | Que las herramientas lleguen de verdad a Railway y a Supabase, y que llegue el webhook de fin de llamada | Destapó 2 bugs reales (errores 18 y 19); arreglados. **Falta repetirla una vez tras el arreglo** |
+| **Conversación real** (`agents.py chat`, texto por WebSocket, sin mocks) | Que las herramientas lleguen de verdad a Railway y a Supabase, que el link llegue a Telegram y que llegue el webhook de fin de llamada | Destapó 2 bugs reales (errores 18 y 19); arreglados. Repetida con Telegram en vivo: 5 herramientas, el link llegó al celular (`conv_9201m4ry0cszeqhr10fnmzhe7yxw`) |
+| **Prueba directa del canal** (herramientas llamadas como lo haría el agente, sin ElevenLabs) | Que el token del bot y el chat de Telegram funcionen sin gastar créditos | Destapó 2 errores de configuración (26 y 27); arreglados |
 
 ---
 
@@ -218,6 +228,8 @@ El agente no se configuró a mano en el dashboard: está en archivos JSON dentro
 6. **Batería de pruebas del agente:** pasó de 14/22 a 22/22 corrigiendo configuración, no el backend.
 7. **Conversación real sin mocks:** encontró lo que ninguna prueba simulada podía ver.
 8. **Ajuste final del guardrail de montos** y control de gasto de créditos.
+9. **Consola de la fintech:** el back office en React, con la llamada en vivo hecha con ElevenLabs UI, el sentimiento de cada conversación y clientes ficticios al azar.
+10. **Telegram en vivo:** primero probado sin créditos, llamando a las herramientas directamente; después, con una conversación real con el agente.
 
 ---
 
@@ -376,6 +388,34 @@ La **redacción de datos personales en el historial** también existe en la API,
 
 El **análisis de sentimiento** ya venía activo: cada conversación trae una etiqueta, un puntaje de frustración y el punto más bajo. El webhook de fin de llamada lo guarda y la consola lo muestra. La llamada con Laura terminó en +0.6 después de un mínimo de −0.3; la de Nexo terminó con frustración 1.0 y se pasó a un asesor.
 
+### Telegram de verdad: dos errores que ninguna prueba simulada habría visto
+
+Antes de gastar créditos, se probó el canal llamando a las herramientas de producción directamente, como lo haría el agente (verificar, opciones, plan, link), con un `conversation_id` de prueba que la consola oculta. La bitácora (`audit_log`) guarda el error exacto de Telegram, y eso hizo el diagnóstico inmediato.
+
+**26. Telegram respondía `404 Not Found`.**
+- **Causa:** el token del bot en Railway no era válido. Un 404 en la API de Telegram significa que no reconoce el token; si el problema fuera el chat, diría "chat not found".
+- **Arreglo:** volver a copiar el token de @BotFather. De paso, el backend ahora limpia espacios y comillas del token, que es el error típico al pegarlo.
+
+**27. Telegram respondía `403: the bot can't send messages to the bot`.**
+- **Causa:** el ID de chat registrado era el del bot, no el de la persona. Pasa al reenviarle un mensaje del bot a @userinfobot.
+- **Arreglo:** escribirle directamente a @userinfobot para obtener el ID propio y actualizarlo en la bóveda. Después de eso, el link llegó.
+- **Lección:** el adaptador estaba bien; lo que falla en un canal real es la configuración. Por eso se prueba el canal aparte, sin créditos, antes de la conversación completa.
+
+### Lo que mostró la conversación con Telegram en vivo
+
+**28. Dos detalles de habla.** La conversación completa funcionó (verificó, ofreció, registró el plan y el link llegó), pero:
+- dijo "tienes tres opciones", presentó dos y preguntó "¿cuál de estas dos?". El procedimiento ya decía "nunca digas cuántas opciones hay", y aun así lo hizo. La instrucción ahora da el patrón exacto: empezar con "Puedes pagar…", seguir con "O también…" y cerrar con "¿Cuál te funciona mejor?";
+- dijo "veintiuno días". El prompt ahora tiene una regla de concordancia: "veintiún días", "un millón de pesos", "una cuota".
+- **Lección:** con un modelo rápido como Haiku, una prohibición ("no cuentes") funciona peor que un ejemplo de qué decir en su lugar.
+
+### La consola
+
+**29. La transcripción de la llamada en vivo pasaba de una fintech a otra.**
+- **Síntoma:** después de hablar con Sofía y cambiar a Nexo, el panel seguía mostrando la conversación de Avanza.
+- **Causa:** la transcripción vivía en el componente principal, que no cambia al cambiar de fintech, y nada la limpiaba.
+- **Arreglo:** al elegir otra fintech (también con atrás y adelante del navegador), el panel cuelga si hay una llamada, limpia la transcripción y descarta cualquier mensaje tardío de la llamada anterior.
+- **Por qué importa:** en multi-tenant, mostrar en la pantalla de Nexo lo que dijo un cliente de Avanza es exactamente el tipo de fuga que el resto del diseño evita.
+
 ---
 
 ## 7. Estado actual
@@ -390,9 +430,10 @@ El **análisis de sentimiento** ya venía activo: cada conversación trae una et
 | Batería del agente | 21/22 completa; 4/4 en las pruebas del guardrail tras pasar a Haiku | Corridas en ElevenLabs |
 | Conversación real de voz | Hecha | 4 minutos con Laura: verificó, ofreció el plan de dificultad, lo registró y envió el link |
 | Ritmo tras resultados de herramientas | Ajustado (procedure, sonido de fondo, frase de espera), falta oírlo | Una llamada de voz más |
-| Consola de la fintech | En línea | https://dashboard-production-ea78.up.railway.app: clientes, planes con link de pago, conversaciones con sentimiento, llamada en vivo |
+| Conteo de opciones y concordancia ("veintiún días") | Corregido y publicado, falta oírlo | Una llamada de voz más |
+| Consola de la fintech | En línea | https://dashboard-production-ea78.up.railway.app: clientes (y clientes al azar), planes con link de pago, conversaciones con sentimiento, llamada en vivo |
 | Conversation ID para entregar | `conv_0701m4rpy0bpf5p8169kkpce77qk` | 5/5 criterios, datos completos, terminó con `end_call` |
-| Envío real por Telegram | **En curso** | Falta el token del bot en Railway y `CHANNEL_MODE=live` |
+| Envío real por Telegram | Listo | `CHANNEL_MODE=live`; el link llegó al celular en una conversación real (`conv_9201m4ry0cszeqhr10fnmzhe7yxw`) |
 | Redacción de datos personales | Brecha confirmada | La API respondió 403: requiere Enterprise |
 
 **Link para hablar con el agente:** https://elevenlabs.io/app/talk-to?agent_id=agent_1101m4rhgsg7ezv9abbe1ztkgnf6
@@ -412,6 +453,7 @@ El **análisis de sentimiento** ya venía activo: cada conversación trae una et
 | Streaming en guardrails | Blocking | En voz, blocking genera silencios; la documentación lo recomienda así |
 | Agente como código y validación offline | Configurar en el dashboard | Revisable, repetible, reversible y más barato de probar |
 | Canal detrás de un adaptador | Código distinto por canal | Cambiar WhatsApp por Telegram es cambiar un valor |
+| Consola de solo lectura; crear clientes por una función acotada | Darle permisos de escritura a la consola | La única escritura posible es "agregar un cliente ficticio a esta fintech" |
 
 ---
 
@@ -421,8 +463,9 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 ### Antes de grabar
 
-- [ ] Hacer una llamada completa de prueba con Laura; confirmar en Supabase que quedó el plan (`cobranza.payment_plans`) y el registro en `audit_log`.
-- [ ] Telegram listo: `TELEGRAM_BOT_TOKEN` y `CHANNEL_MODE=live` en Railway (los clientes de prueba ya tienen tu `chat_id`). Haberle escrito `/start` al bot una vez. Telegram abierto en el celular, en cámara.
+- [ ] Hacer una llamada de voz corta de prueba y escuchar dos cosas: que no cuente las opciones ("tienes tres opciones") y que diga "veintiún días".
+- [ ] Telegram ya funciona (`CHANNEL_MODE=live`, token y chat verificados). Solo falta tenerlo abierto en el celular, en cámara, con las notificaciones visibles.
+- [ ] Decidir con quién llamar. Laura ya tiene dos planes de pruebas anteriores. Para una pantalla más limpia, crear un cliente con "Agregar cliente al azar" y llamar como esa persona; su tarjeta dice exactamente qué decir para verificarse.
 - [ ] Pestañas abiertas, en orden: la consola (https://dashboard-production-ea78.up.railway.app), dashboard del agente en ElevenLabs (procedures y pruebas), Supabase (Table Editor con el esquema `cobranza`), el repo.
 - [ ] Notificaciones cerradas; probar el micrófono.
 
@@ -437,7 +480,9 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 ### 0:45–2:15 · Demo en voz
 
-**Mostrar:** la consola de la fintech (sección "Llamada en vivo"). Botón "Llamar como Laura": la orbe muestra si la agente escucha, habla o consulta, y cada herramienta aparece en la transcripción mientras corre. Alternativa: el link `talk-to`.
+**Mostrar:** la consola de la fintech (sección "Llamada en vivo"). Botón "Llamar como Laura" (o el cliente al azar que hayas creado; en ese caso, cambia los datos de los pasos 2 y 3 por los de su tarjeta). La orbe muestra si la agente escucha, habla o consulta, y cada herramienta aparece en la transcripción mientras corre. Alternativa: el link `talk-to`.
+
+**Opcional, 5 segundos antes de llamar:** clic en "Agregar cliente al azar". → *"The fintech's back office: fictitious customers, and I can add more. The console is read-only; the only write it can do is add a fake customer to this fintech."*
 
 **Hacer y narrar:**
 1. *"I'll call as Laura, three weeks late."* El agente se presenta como IA y avisa que la llamada se graba. → *"Disclosure first, it's required."*
@@ -445,7 +490,7 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 3. El agente dice "cuenta terminada en 4417, $1.200.000, 21 días". → *"Masked data only: the model never sees the full ID or account number."*
 4. Ofrece dos opciones. Pedir **un descuento del 90%**. → *"It declines. Discounts don't exist in the policy, and even if the model agreed, the backend would reject any plan it didn't offer."*
 5. Elegir 3 cuotas, confirmar. → *"Plan registered, idempotent: saying yes twice doesn't create two plans."*
-6. Llega el link por Telegram al celular en cámara. → *"The channel is behind an adapter: WhatsApp needs a Meta-approved template, so the demo uses Telegram; switching is one value."*
+6. Llega el link por Telegram al celular en cámara: es un envío real, no un mock. → *"That's a real message from the bot. The channel is behind an adapter: WhatsApp needs a Meta-approved template, so the demo uses Telegram; switching is one value."*
 7. Unos segundos en inglés: *"Can we continue in English?"* → sigue sin pedir otra vez la identidad.
 8. Colgar. En la consola aparece el plan; "Abrir y pagar" lo marca como pagado. Abrir la conversación: el paso a paso y el ánimo del cliente. → *"For the head of collections: every promise is recorded, and the call ended calmer than it started."*
 
@@ -453,7 +498,10 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 ### 2:15–4:00 · Decisiones técnicas (el corazón del video)
 
-**Mostrar, en este orden:** dashboard (procedures), repo (`tool_configs`, `scripts/agents.py`), Supabase (`audit_log`, políticas RLS).
+**Mostrar, en este orden:** el `README.md` de la raíz (el diagrama de las tres piezas), dashboard (procedures), repo (`tool_configs`, `scripts/agents.py`), Supabase (`audit_log`, políticas RLS).
+
+**Decir (apertura, sobre el diagrama):**
+> "Three pieces with three different owners. The client is the fintech's own systems: loans, people, the credit policy. Here they're simulated, in a real deployment they already exist. The integration is my job: small, safe tools on top of their APIs. And the agent is the product. The agent decides how to talk; the integration decides anything with consequences."
 
 **Decir:**
 > "Three decisions. First: structured procedures where a mistake costs money or privacy (identity, the payment agreement, escalation) and free-form where the agent has to listen: hardship, disputes, opt-out, a third party answering."
@@ -466,6 +514,8 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 **Anécdota para mostrar criterio (elegir una, 20–30 segundos):**
 > "The most useful test wasn't a simulated one. A real text conversation showed that a header depended on a variable that only existed in tests. Every tool call would have failed in production. Mocks can't catch that; now the build rejects it."
+
+> *(alternativa, la más reciente)* "Before spending credits on a real call, I tested Telegram by calling the production tools directly. The audit log showed the exact error twice: first an invalid bot token, then a chat id that belonged to the bot itself. Two config errors no mock would ever show, found for free."
 
 > *(alternativa)* "The discount guardrail was cutting calls when customers switched to English: in streaming mode it judges partial text, so a half-spoken number looked invented. Blocking mode fixed that but caused silence. I kept streaming, as the docs recommend for voice, and gave the guardrail a stronger evaluator. Ten out of ten."
 
@@ -496,4 +546,6 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 | ¿Y si el backend se cae? | Reintenta una vez, ofrece un asesor y nunca inventa datos (prueba 10). |
 | ¿Cuánto cuesta una llamada? | ~US$0.08 por minuto más el LLM; con 3 a 4 minutos por llamada, se compara contra el costo de un gestor por contacto. |
 | ¿Por qué Telegram y no WhatsApp? | WhatsApp necesita una plantilla aprobada por Meta, que tarda días. El canal de WhatsApp ya está escrito detrás del adaptador; activarlo es cambiar un valor por fintech. |
-| ¿Qué no está probado? | El envío real por WhatsApp (falta la aprobación de la plantilla) y las llamadas telefónicas reales. |
+| ¿Qué no está probado? | El envío real por WhatsApp (falta la aprobación de la plantilla), las llamadas telefónicas reales y las campañas salientes. Telegram sí está probado de punta a punta. |
+| ¿La Ley 2300 no impide llamar a esta hora? | Aplica a lo que la empresa inicia. Aquí el cliente llama, así que no se bloquea. El endpoint `contact-window` es la puerta para campañas salientes; con `at=` se puede mostrar, por ejemplo, que un domingo a las 10 a.m. la respuesta es `sunday_or_holiday` y la próxima hora permitida es el lunes a las 7 a.m. |
+| ¿Quién es "el cliente"? | La fintech: sus sistemas ya existen y no se reconstruyen. La integración es el trabajo del FDE y el agente es el producto. Lo explica el `README.md` de la raíz. |

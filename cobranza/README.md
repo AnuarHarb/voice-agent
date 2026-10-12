@@ -2,6 +2,8 @@
 
 Voice agent on ElevenLabs Agents that handles early-stage collections in Spanish for a fictional Colombian fintech. It verifies identity, offers only the plans the credit policy allows, and sends the payment link over Telegram. Two tenants share one template: **Avanza Crédito** and **Nexo Finanzas**. A WhatsApp Cloud API channel is implemented behind the same adapter but not enabled: it needs a Meta-approved utility template.
 
+This file covers setup and operations. For how the system is split between the client (the fintech's systems), the integration and the agent, see the [root README](../README.md).
+
 ```
 cobranza/
   backend/              FastAPI (deploys to Railway)
@@ -37,6 +39,8 @@ Demo customers (seed):
 | avanza | Carlos | 5521 | 1985-11-02 | `acc_avz_0002` |
 | avanza | Marta | 7788 | 1978-03-30 | `acc_avz_0003` |
 | nexo | Andrés | 4417 | 1990-05-14 | `acc_nxo_0001` (same identity as Laura, other tenant) |
+
+More can be created from the console (see section 5).
 
 To receive the payment link on your own phone:
 
@@ -111,6 +115,11 @@ It refreshes every 10 seconds and switches between tenants.
   integration role cannot, but RLS still scopes each query to one tenant and the role cannot write.
   Set its password with `alter role cobranza_console password '...'` and put the URL in `CONSOLE_DATABASE_URL`.
 - The console has no login and shows full IDs of fictional customers. Do not point it at real data.
+- "Agregar cliente al azar" calls `POST /console/{tenant}/customers`, which generates a random fictional customer
+  and inserts it through `cobranza.create_demo_customer` (migration `20261012000008`), run as `cobranza_app` inside
+  one tenant. The function can only add rows, caps each tenant at 40 accounts, keeps last 4 digits plus birth date
+  unique per tenant, and copies the tenant's demo Telegram chat.
+- Switching tenant hangs up any live call and clears its transcript.
 - "Llamada en vivo" calls the agent from the browser with `@elevenlabs/react` and [ElevenLabs UI](https://ui.elevenlabs.io)
   components (Orb, Conversation, Message, ShimmeringText, vendored in `src/components/ui/`). The agents send
   `agent_tool_request` / `agent_tool_response` client events so the transcript shows each tool step. Every call
