@@ -425,7 +425,7 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
   - En Horacio, el paso de herramienta dentro del procedure de verificación nunca llamó a `verify_identity`. El procedure lo tomó como falla, reintentó y terminó en "falla técnica" con un asesor.
   - En Sofía, con las respuestas encadenadas, dijo "para mañana, sábado diecisiete de octubre". "Mañana" era inventado, y el guardrail de montos y fechas cortó la llamada. El guardrail hizo su trabajo.
 - **Arreglo:** volver a `immediate`, que es lo que funcionaba. Además, el prompt principal ahora prohíbe fechas relativas ("hoy", "mañana"), porque el agente no sabe qué día es. La regla de no contar las opciones pasó del procedure al prompt principal, porque solo en el procedure no se cumplía.
-- **Lección:** las 22 pruebas pasaron con el cambio, porque evalúan texto y no tiempos. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
+- **Lección:** las pruebas evalúan texto, no tiempos, así que no habrían visto este problema. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
 
 ---
 
