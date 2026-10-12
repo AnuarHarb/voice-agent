@@ -203,9 +203,10 @@ async def get_payment_options(
         await audit(tenant.id, body.conversation_id, "get_payment_options", "ok",
                     {"offered": [o.kind for o in out]}, conn=conn)
     return PaymentOptionsResponse(
-        options=out,
-        note=("Amounts come from the credit policy. No discounts exist. Offer hardship options "
-              "only to customers who describe financial hardship."),
+        options=[o for o in out if not o.hardship],
+        hardship_option=next((o for o in out if o.hardship), None),
+        note=("Amounts come from the credit policy. No discounts exist. Present the entries in options. "
+              "Offer hardship_option only to customers who describe financial hardship."),
     )
 
 

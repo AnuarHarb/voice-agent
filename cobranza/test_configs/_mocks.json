@@ -21,14 +21,14 @@
       { "plan_id": "pln_CUOT2345ABCD", "kind": "installments", "installments": 3, "installment_amount": 400000,
         "installment_amount_text": "$400.000", "last_installment_amount": 400000, "total_amount": 1200000,
         "total_amount_text": "$1.200.000", "first_due_date": "2026-10-19", "first_due_date_text": "lunes 19 de octubre",
-        "frequency": "mensual", "hardship": false },
-      { "plan_id": "pln_DIFI2345ABCD", "kind": "hardship", "installments": 6, "installment_amount": 200000,
-        "installment_amount_text": "$200.000", "last_installment_amount": 200000, "total_amount": 1200000,
-        "total_amount_text": "$1.200.000", "first_due_date": "2026-11-10", "first_due_date_text": "martes 10 de noviembre",
-        "frequency": "mensual", "hardship": true }
+        "frequency": "mensual", "hardship": false }
     ],
+    "hardship_option": { "plan_id": "pln_DIFI2345ABCD", "kind": "hardship", "installments": 6, "installment_amount": 200000,
+      "installment_amount_text": "$200.000", "last_installment_amount": 200000, "total_amount": 1200000,
+      "total_amount_text": "$1.200.000", "first_due_date": "2026-11-10", "first_due_date_text": "martes 10 de noviembre",
+      "frequency": "mensual", "hardship": true },
     "discounts_available": false,
-    "note": "Amounts come from the credit policy. No discounts exist. Offer hardship options only to customers who describe financial hardship."
+    "note": "Amounts come from the credit policy. No discounts exist. Present the entries in options. Offer hardship_option only to customers who describe financial hardship."
   },
   "plan": {
     "plan_ref": "AVA-P-7K3Q9X", "status": "pending_payment", "installments": 3,

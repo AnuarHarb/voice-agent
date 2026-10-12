@@ -30,7 +30,8 @@ async def test_happy_path_verify_options_plan_link_and_pay(client, avanza_key, c
     options = (await client.post("/tools/payment-options", headers=h(avanza_key), json=base)).json()
     assert options["discounts_available"] is False
     kinds = {o["kind"]: o for o in options["options"]}
-    assert set(kinds) == {"full", "installments", "hardship"}
+    assert set(kinds) == {"full", "installments"}
+    assert options["hardship_option"]["installments"] == 6
     assert kinds["installments"]["installment_amount_text"] == "$400.000"
     chosen = kinds["installments"]["plan_id"]
 
@@ -151,6 +152,7 @@ async def test_tenant_isolation_token_from_avanza_with_nexo_key(client, avanza_k
     options = (await client.post("/tools/payment-options", headers=h(nexo_key), json={
         "conversation_id": nexo_conv, "session_token": nexo["session_token"]})).json()
     assert [o["kind"] for o in options["options"]] == ["full", "installments"]
+    assert options["hardship_option"] is None
 
 
 async def test_tenant_credentials(client, avanza_key, conversation_id):

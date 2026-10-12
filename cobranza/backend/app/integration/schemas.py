@@ -93,6 +93,8 @@ class PaymentOptionOut(BaseModel):
 
 class PaymentOptionsResponse(BaseModel):
     options: list[PaymentOptionOut]
+    # Kept out of `options` so a model counting the list never announces an option it may not offer.
+    hardship_option: PaymentOptionOut | None = None
     discounts_available: bool = False
     note: str
 
