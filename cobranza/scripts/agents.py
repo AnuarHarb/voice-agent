@@ -332,11 +332,20 @@ def build_tenant(tenant: str, state: dict, offline: bool) -> dict:
 # ----------------------------------------------------------------- validation
 
 def openapi() -> dict:
+    # The spec bundled with the CLI lags behind the API (it lacked eleven_v4_turbo), so prefer the live one.
     cache = BUILD / "elevenlabs_openapi.json"
-    if not cache.exists():
+    if not cache.exists() or time.time() - cache.stat().st_mtime > 86400:
         BUILD.mkdir(exist_ok=True)
-        spec = subprocess.run(["npx", "--no-install", "elevenlabs", "--spec"], cwd=ROOT, check=True,
-                              capture_output=True, text=True).stdout
+        try:
+            response = httpx.get(f"{ENV.get('ELEVENLABS_BASE_URL', 'https://api.elevenlabs.io')}/openapi.json", timeout=30)
+            response.raise_for_status()
+            spec = response.text
+        except httpx.HTTPError:
+            if cache.exists():
+                spec = cache.read_text(encoding="utf-8")
+            else:
+                spec = subprocess.run(["npx", "--no-install", "elevenlabs", "--spec"], cwd=ROOT, check=True,
+                                      capture_output=True, text=True).stdout
         cache.write_text(spec, encoding="utf-8")
     spec = read_json(cache)
     schemas = spec["components"]["schemas"]

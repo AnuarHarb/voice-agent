@@ -52,11 +52,12 @@
       }
     },
     "tts": {
-      "model_id": "eleven_flash_v2_5",
+      "model_id": "eleven_v4_turbo",
       "voice_id": "${voice_id}",
+      "expressive_mode": true,
       "stability": 0.55,
-      "similarity_boost": 0.8,
-      "speed": 1.0,
+      "similarity_boost": 0.75,
+      "speed": 0.95,
       "text_normalisation_type": "elevenlabs"
     },
     "asr": {
@@ -66,7 +67,8 @@
     },
     "turn": {
       "turn_timeout": 8,
-      "spelling_patience": "auto"
+      "spelling_patience": "auto",
+      "speculative_turn": true
     },
     "conversation": {
       "max_duration_seconds": 360,
@@ -79,7 +81,7 @@
     "summary_language": "es",
     "auth": { "enable_auth": false, "allowlist": [] },
     "overrides": {
-      "conversation_config_override": { "conversation": { "text_only": true } }
+      "conversation_config_override": { "agent": { "language": true }, "conversation": { "text_only": true } }
     },
     "privacy": {
       "record_voice": true,
@@ -105,9 +107,9 @@
             {
               "is_enabled": true,
               "name": "Sin descuentos inventados",
-              "prompt": "Block the agent reply only if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver, reduced payoff or a lower total than the tool results show, in any language. Repeating amounts, installments or dates that the tools returned, in any format or language, is allowed. Politely declining a discount request is allowed.",
+              "prompt": "Block the agent reply if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver or reduced payoff, or if it states an amount, installment count or date that clearly differs from every tool result in the history, in any language. Do not block for formatting or language differences ($1,200,000 = $1.200.000 = un millón doscientos mil pesos; October 16 = 16 de octubre), for numbers cut off at the end of a reply that is still being spoken, or for repeating the customer's own words back. Politely declining a discount request is allowed.",
               "execution_mode": "streaming",
-              "model": "gemini-3.5-flash",
+              "model": "claude-haiku-4-5",
               "history_message_count": 12,
               "history_include_tool_calls": true,
               "trigger_action": { "type": "end_call" }

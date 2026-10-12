@@ -35,6 +35,11 @@
     "installment_amount_text": "$400.000", "total_amount_text": "$1.200.000",
     "first_due_date": "2026-10-19", "first_due_date_text": "lunes 19 de octubre", "idempotent_replay": false
   },
+  "plan_hardship": {
+    "plan_ref": "AVA-P-9H2W4N", "status": "pending_payment", "installments": 6,
+    "installment_amount_text": "$200.000", "total_amount_text": "$1.200.000",
+    "first_due_date": "2026-11-10", "first_due_date_text": "martes 10 de noviembre", "idempotent_replay": false
+  },
   "link": { "sent": true, "channel": "${channel}", "recipient": "${channel_label} terminado en 4567", "already_sent": false },
   "dispute": { "case_ref": "AVA-D-4M8RTW", "status": "open",
     "next_step": "Collection is paused. A specialist reviews the case within 5 business days and contacts the customer." },

@@ -4,10 +4,9 @@
   "trigger": "A customer whose identity is already verified wants to pay, get up to date, catch up on overdue installments, or agree on a payment plan.",
   "steps": [
     { "type": "tool_call", "tool": "get_account_summary", "on_failure": "retry_then_escalate" },
-    { "type": "tell", "instruction": "Tell the customer the account status using only the tool result: the account's last four digits, the overdue amount and how many days late it is. Mention the total balance only if they ask." },
+    { "type": "ask", "instruction": "In at most two short sentences, tell the customer the account status using only the tool result: the account's last four digits, the overdue amount and how many days late it is. Mention the total balance only if they ask. Then ask if they want you to look at the ways to get up to date, and wait for the answer." },
     { "type": "tool_call", "tool": "get_payment_options", "on_failure": "retry_then_escalate" },
-    { "type": "tell", "instruction": "Present at most two options from get_payment_options, with their amounts, number of installments and first due date exactly as returned. Offer an option marked hardship only if the customer described financial hardship such as job loss, illness or an emergency." },
-    { "type": "ask", "instruction": "Ask which of the options the customer prefers." },
+    { "type": "ask", "instruction": "Present at most two options from get_payment_options, with their amounts, number of installments and first due date exactly as returned. One short sentence per option, and never say how many options exist in total. Offer an option marked hardship only if the customer described financial hardship such as job loss, illness or an emergency, and present it first. Then ask which one they prefer." },
     { "type": "ask", "instruction": "Repeat out loud the chosen option's installment amount, number of installments and first due date, and ask the customer to confirm. A valid answer is a clear yes or no." },
     {
       "type": "branch",

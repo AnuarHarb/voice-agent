@@ -7,7 +7,7 @@
     "verify_identity": "verified",
     "get_account_summary": "summary",
     "get_payment_options": "options",
-    "create_payment_plan": "plan",
+    "create_payment_plan": "plan_hardship",
     "send_payment_link": "link",
     "request_callback": "callback"
   },

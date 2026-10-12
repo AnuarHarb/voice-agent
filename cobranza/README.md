@@ -87,7 +87,7 @@ Placeholders in the configs use `${...}`: `${env:NAME:default}`, `${file:path}`,
 - Each tenant has its own tool set with its own header secret. `X-Tenant-Id` is fixed per agent, and the backend rejects a mismatch and logs it in `audit_log`.
 - A `plan_id` is only accepted if it was offered to the same session. `idempotency_key` is the conversation id, so a repeated confirmation does not create a second plan.
 - The native `retry` step hangs up when it runs out of attempts. To keep "retry once, then offer a callback", the build generates `reintento_<tool>` sub-procedures that escalate to `escalamiento_falla_tecnica`.
-- LLM: `claude-sonnet-5` (the API does not offer `claude-sonnet-5-5`). Change it with `ELEVENLABS_LLM`.
+- LLM: `claude-haiku-4-5`, chosen for latency and cost after a real call; `claude-sonnet-5` is the stronger option (the API does not offer `claude-sonnet-5-5`). Change it with `ELEVENLABS_LLM`.
 
 ## 4. Isolation demo
 
