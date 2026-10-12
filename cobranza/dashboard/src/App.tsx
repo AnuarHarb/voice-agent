@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useState } from 'react'
 import { api, type Overview, type Tenant } from './api'
 import { Cases } from './components/Cases'
 import { Conversations } from './components/Conversations'
@@ -72,9 +72,6 @@ export default function App() {
 
   useEffect(() => {
     api.tenants().then(setTenants, (e: Error) => setError(e.message))
-    const onPop = () => setTenant(tenantFromUrl())
-    addEventListener('popstate', onPop)
-    return () => removeEventListener('popstate', onPop)
   }, [])
 
   const load = useCallback(
@@ -112,11 +109,24 @@ export default function App() {
     if (current) document.title = `Mesa de cobranza de ${current.name}`
   }, [current])
 
+  const switchTenant = (id: string) => {
+    if (id === tenant) return
+    call.reset()
+    setTenant(id)
+  }
+
+  const onPop = useEffectEvent(() => switchTenant(tenantFromUrl()))
+  useEffect(() => {
+    const listener = () => onPop()
+    addEventListener('popstate', listener)
+    return () => removeEventListener('popstate', listener)
+  }, [])
+
   const choose = (id: string) => (event: React.MouseEvent) => {
     event.preventDefault()
-    if (inCall) call.end()
+    if (id === tenant) return
     history.pushState(null, '', `?fintech=${id}`)
-    setTenant(id)
+    switchTenant(id)
   }
 
   return (

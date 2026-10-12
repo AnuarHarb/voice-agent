@@ -13,8 +13,11 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
   const [error, setError] = useState('')
   const mic = useRef<MediaStream | null>(null)
   const nextId = useRef(0)
+  const live = useRef(false)
 
-  const push = (line: NewLine) => setLines((all) => [...all, { ...line, id: nextId.current++ }])
+  const push = (line: NewLine) => {
+    if (live.current) setLines((all) => [...all, { ...line, id: nextId.current++ }])
+  }
 
   const releaseMic = () => {
     mic.current?.getTracks().forEach((t) => t.stop())
@@ -48,6 +51,7 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
   const start = useCallback(
     async (as: Customer | null = null) => {
       if (!agentId) return
+      live.current = true
       setCaller(as)
       setLines([])
       setError('')
@@ -78,6 +82,14 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
     isMuted,
     start,
     end: conversation.endSession,
+    reset: () => {
+      live.current = false
+      if (conversation.status !== 'disconnected') conversation.endSession()
+      setLines([])
+      setCaller(null)
+      setError('')
+      setPendingTools(0)
+    },
     toggleMute: () => conversation.setMuted(!isMuted),
     getInputVolume: conversation.getInputVolume,
     getOutputVolume: conversation.getOutputVolume,
