@@ -3,9 +3,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.config import get_settings
 from app.db import close_pool, connection, open_pool
+from app.fintech_sim import console
 from app.integration import compliance, payment_page, tools, webhooks
 from app.integration.auth import ToolError, audit, tool_error_handler
 
@@ -26,6 +29,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_exception_handler(ToolError, tool_error_handler)
+# Only the read-only console is meant to be called from a browser.
+app.add_middleware(CORSMiddleware, allow_methods=["GET"], allow_headers=[],
+                   allow_origins=[o.strip() for o in get_settings().console_allowed_origins.split(",") if o.strip()])
 
 
 @app.exception_handler(RequestValidationError)
@@ -49,3 +55,4 @@ app.include_router(tools.router)
 app.include_router(webhooks.router)
 app.include_router(compliance.router)
 app.include_router(payment_page.router)
+app.include_router(console.router)

@@ -1,0 +1,185 @@
+:root {
+  --paper: #f2f5f3;
+  --surface: #ffffff;
+  --ink: #1d2b26;
+  --muted: #5d6c66;
+  --rule: #d5ddd9;
+  --mora: #9a5a00;
+  --mora-bg: #fbf1e1;
+  --warn: #a3332b;
+  --accent: #0b6b4f;
+  --accent-soft: #e3f0ea;
+
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.6rem;
+  --step-3: 2.6rem;
+
+  font-family: 'Public Sans Variable', system-ui, sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app[data-tenant='nexo'] {
+  --accent: #2f4fa8;
+  --accent-soft: #e6ebf7;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, h3, p, dl, dd, ol, ul { margin: 0; }
+ul[role='list'], ol { padding: 0; list-style: none; }
+a { color: var(--accent); text-underline-offset: 0.2em; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+code { font-size: 0.92em; }
+
+.app { max-width: 76rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+
+/* masthead: the fintech's name is the brand; the accent color follows it */
+.masthead {
+  display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem;
+  padding: 2rem 0 1.25rem; border-bottom: 3px solid var(--accent);
+}
+.brand p { color: var(--accent); font-weight: 650; font-size: var(--step-1); min-height: 1.5em; }
+.brand h1 { font-size: var(--step-3); line-height: 1.05; font-weight: 750; letter-spacing: -0.02em; }
+
+.masthead ul { display: flex; gap: 0.25rem; padding: 0.25rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; }
+.masthead a {
+  display: block; padding: 0.45rem 1rem; border-radius: 999px; text-decoration: none;
+  color: var(--muted); font-weight: 600; font-size: var(--step--1);
+}
+.masthead a:hover { color: var(--ink); }
+.masthead a[aria-current='page'] { background: var(--accent); color: #fff; }
+
+/* intro: a sentence instead of KPI tiles */
+.intro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem 3rem; align-items: start;
+  padding: 2rem 0 2.5rem;
+}
+.lede { font-size: var(--step-2); line-height: 1.3; max-width: 34ch; font-weight: 420; text-wrap: balance; }
+.lede strong { font-weight: 700; }
+.controls { display: grid; gap: 0.75rem; justify-items: start; font-size: var(--step--1); }
+.controls label { display: flex; gap: 0.5rem; align-items: center; cursor: pointer; }
+.controls input { accent-color: var(--accent); width: 1.1rem; height: 1.1rem; }
+.call {
+  display: inline-block; padding: 0.7rem 1.2rem; border-radius: 0.5rem; background: var(--accent);
+  color: #fff; font-weight: 650; font-size: var(--step-0); text-decoration: none;
+}
+.call:hover { filter: brightness(1.1); }
+
+.muted { color: var(--muted); }
+.error { color: var(--warn); }
+.empty { padding: 1.25rem; border: 1px dashed var(--rule); border-radius: 0.5rem; color: var(--muted); }
+
+/* sections */
+.block { padding: 2rem 0; border-top: 1px solid var(--rule); }
+.block-head { display: grid; gap: 0.25rem; margin-bottom: 1.25rem; }
+.block-head h2, .policy h2 { font-size: var(--step-1); font-weight: 700; }
+.block-head p { color: var(--muted); max-width: 70ch; }
+
+/* customer cards: test data first, large enough to read aloud during a call */
+.customers { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1rem; }
+.customer {
+  display: grid; gap: 1rem; height: 100%; padding: 1.25rem; background: var(--surface);
+  border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 0.25rem 0.75rem 0.75rem 0.25rem;
+}
+.customer > header { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.customer h3 { font-size: var(--step-1); font-weight: 680; line-height: 1.2; }
+.status { font-size: var(--step--1); font-weight: 600; white-space: nowrap; color: var(--mora); }
+.status-current { color: var(--accent); }
+.status-in_dispute { color: var(--muted); }
+
+.test-data { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1.5rem; }
+.test-data div { display: contents; }
+.test-data dt { color: var(--muted); font-size: var(--step--1); align-self: center; }
+.test-data dd { font-size: var(--step-1); font-weight: 600; }
+.test-data mark {
+  background: var(--accent-soft); color: var(--accent); padding: 0 0.15em; margin-left: 0.05em;
+  border-radius: 0.2em; font-weight: 750;
+}
+.say { font-size: var(--step--1); color: var(--muted); }
+
+.debt { display: grid; grid-template-columns: repeat(3, auto); gap: 0.25rem 1rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+.debt dt { color: var(--muted); font-size: var(--step--1); }
+.debt dd { font-weight: 650; }
+.debt .overdue { color: var(--mora); }
+.customer footer { display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step--1); color: var(--muted); }
+
+/* tables */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 0.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: var(--step--1); }
+th, td { padding: 0.7rem 0.9rem; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { color: var(--muted); font-weight: 600; background: var(--paper); }
+tbody tr:last-child > * { border-bottom: 0; }
+tbody th { font-weight: 650; }
+.num { text-align: right; }
+.wrap { white-space: normal; min-width: 18rem; }
+.tag {
+  margin-left: 0.5rem; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+  background: var(--mora-bg); color: var(--mora);
+}
+
+/* conversations */
+.conversations { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+.conversations details { min-width: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 0.5rem; }
+.conversations details[open] { border-color: var(--accent); }
+.conversations summary {
+  display: grid; grid-template-columns: 9rem minmax(0, 1fr) auto 6.5rem; gap: 1rem; align-items: center;
+  padding: 0.85rem 1rem; cursor: pointer; list-style: none;
+}
+.conversations summary::-webkit-details-marker { display: none; }
+.conversations summary::before { content: '▸'; position: absolute; left: 0.75rem; color: var(--muted); }
+.conversations details[open] summary::before { content: '▾'; }
+.conversations summary { position: relative; padding-left: 1.75rem; }
+.who { font-weight: 620; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outcome { font-size: var(--step--1); font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--paper); color: var(--muted); }
+.outcome-promesa { background: var(--accent-soft); color: var(--accent); }
+.outcome-escalado, .outcome-disputa { background: var(--mora-bg); color: var(--mora); }
+.conversations summary > .muted { text-align: right; font-size: var(--step--1); }
+
+.conversation-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 0 1rem 1.25rem 1.75rem; }
+.conversation-body h3 { font-size: var(--step-0); font-weight: 650; }
+.facts { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; font-size: var(--step--1); }
+.facts dt { color: var(--muted); }
+.facts dd { font-weight: 600; }
+
+/* the agent's steps really are a sequence, so they are numbered */
+.events { counter-reset: step; display: grid; gap: 0; border-left: 2px solid var(--rule); margin-left: 0.6rem; }
+.events li {
+  counter-increment: step; position: relative; display: grid; grid-template-columns: 6rem 1fr; gap: 0.15rem 1rem;
+  padding: 0.5rem 0 0.5rem 1.5rem; font-size: var(--step--1);
+}
+.events li::before {
+  content: counter(step); position: absolute; left: -0.75rem; top: 0.5rem; width: 1.4rem; height: 1.4rem;
+  display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 0.7rem; font-weight: 700;
+}
+.events li.is-warning::before { background: var(--mora); }
+.events time { color: var(--muted); }
+.events dl { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0 1rem; color: var(--muted); min-width: 0; }
+.events dl div { display: flex; gap: 0.35rem; min-width: 0; }
+.events dd { overflow-wrap: anywhere; }
+.events dt::after { content: ':'; }
+
+.policy p { max-width: 70ch; margin-top: 0.5rem; }
+.colophon { padding-top: 2rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: var(--step--1); max-width: 70ch; }
+
+@media (max-width: 48rem) {
+  .intro { grid-template-columns: 1fr; }
+  .brand h1 { font-size: var(--step-2); }
+  .lede { font-size: var(--step-1); }
+  .conversations summary { grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem 1rem; }
+  .conversations summary time { grid-column: 1 / -1; font-size: var(--step--1); color: var(--muted); }
+  .conversations summary > .muted { display: none; }
+  .events li { grid-template-columns: 1fr; }
+  .events dl { grid-column: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition: none !important; }
+}

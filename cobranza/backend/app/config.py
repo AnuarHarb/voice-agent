@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
 
     database_url: str
+    console_database_url: str = ""
+    console_allowed_origins: str = "*"
     public_base_url: str = "http://localhost:8000"
     post_call_webhook_secret: str = ""
     post_call_max_skew_secs: int = 30 * 60

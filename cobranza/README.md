@@ -99,3 +99,24 @@ curl -s -X POST $BACKEND_URL/tools/account-summary \
 ```
 
 `tests/test_tools_api.py` covers this case, and also an RLS check run directly in Postgres with the app role.
+
+## 5. Back-office console (`dashboard/`)
+
+A React + Vite app that plays the fintech's collections desk: test customers with their ID and birth date,
+debts, plans registered by voice, every conversation with the agent's step-by-step audit trail, and open cases.
+It refreshes every 10 seconds and switches between tenants.
+
+- Data comes from read-only `GET /console/...` endpoints in the backend (`app/fintech_sim/console.py`).
+- They connect as `cobranza_console` (migration `20261012000005`): it may read `pii_vault`, which the voice
+  integration role cannot, but RLS still scopes each query to one tenant and the role cannot write.
+  Set its password with `alter role cobranza_console password '...'` and put the URL in `CONSOLE_DATABASE_URL`.
+- The console has no login and shows full IDs of fictional customers. Do not point it at real data.
+
+```sh
+cd dashboard
+npm install
+VITE_API_URL=http://localhost:8000 npm run dev
+```
+
+On Railway: a second service with root directory `cobranza/dashboard` (it builds with its `Dockerfile` and serves
+with Caddy), and the variable `VITE_API_URL` set to the backend's public URL.
