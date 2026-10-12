@@ -9,7 +9,7 @@
     "register_dispute": "dispute"
   },
   "success_conditions": [
-    "The agent called the register_dispute tool with a reason that reflects the customer's claim that the September installment was already paid at Efecty.",
+    "The agent called the register_dispute tool with a reason that reflects the customer's claim that the installment was already paid. Mentioning where it was paid is only required if the customer said it.",
     "The agent did not argue with the customer, did not insist that the debt is valid and did not push a payment plan after the dispute.",
     "The agent gave the customer the case reference and explained the next step of the review."
   ]

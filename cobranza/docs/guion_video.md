@@ -365,6 +365,17 @@ Cada error tiene el mismo formato: **síntoma → causa → arreglo → por qué
 
 **24. Una prueba con el mock equivocado.** La prueba de "perdió el trabajo" aceptaba el plan de 6 cuotas, pero el mock de `create_payment_plan` devolvía el de 3 cuotas. El evaluador lo detectó con Haiku; se creó un mock propio para el plan de dificultad.
 
+**25. Lo que trajo el OpenAPI vivo.** Al validar contra el OpenAPI de la API (y no la copia de la CLI) aparecieron campos que la plantilla no usaba. Se activaron los que atacan lo que mostró la llamada real:
+- **sonido de fondo de oficina** a volumen bajo (`conversation.background_sound`), para que un silencio corto no suene a llamada caída;
+- **frase de espera** generada por el modelo si la respuesta tarda más de 2.5 segundos (`turn.soft_timeout_config`), en el idioma del cliente y sin montos;
+- **"ajá", "mjm", "ok" o "claro" ya no interrumpen** a la agente (`turn.interruption_ignore_terms`);
+- **un modelo de respaldo**: si Haiku no responde en 5 segundos, pasa a GPT-5.6 Luna y luego a Gemini 3.5 Flash (`backup_llm_config`);
+- en el link `talk-to`, el revisor ve **el ID de la conversación y cuándo corre cada herramienta**.
+
+La **redacción de datos personales en el historial** también existe en la API, pero al publicarla respondió `403 feature_not_available: requires an enterprise subscription`. Queda como brecha, ahora con evidencia.
+
+El **análisis de sentimiento** ya venía activo: cada conversación trae una etiqueta, un puntaje de frustración y el punto más bajo. El webhook de fin de llamada lo guarda y la consola lo muestra. La llamada con Laura terminó en +0.6 después de un mínimo de −0.3; la de Nexo terminó con frustración 1.0 y se pasó a un asesor.
+
 ---
 
 ## 7. Estado actual
@@ -378,8 +389,11 @@ Cada error tiene el mismo formato: **síntoma → causa → arreglo → por qué
 | Pruebas del backend | 29/29 | pytest |
 | Batería del agente | 21/22 completa; 4/4 en las pruebas del guardrail tras pasar a Haiku | Corridas en ElevenLabs |
 | Conversación real de voz | Hecha | 4 minutos con Laura: verificó, ofreció el plan de dificultad, lo registró y envió el link |
-| Ritmo tras resultados de herramientas | Ajustado, falta oírlo | Una llamada de voz más |
-| Envío real por WhatsApp/Telegram | **Pendiente** | Hoy `CHANNEL_MODE=log`; faltan credenciales de Meta o el token del bot |
+| Ritmo tras resultados de herramientas | Ajustado (procedure, sonido de fondo, frase de espera), falta oírlo | Una llamada de voz más |
+| Consola de la fintech | En línea | https://dashboard-production-ea78.up.railway.app: clientes, planes con link de pago, conversaciones con sentimiento, llamada en vivo |
+| Conversation ID para entregar | `conv_0701m4rpy0bpf5p8169kkpce77qk` | 5/5 criterios, datos completos, terminó con `end_call` |
+| Envío real por Telegram | **En curso** | Falta el token del bot en Railway y `CHANNEL_MODE=live` |
+| Redacción de datos personales | Brecha confirmada | La API respondió 403: requiere Enterprise |
 
 **Link para hablar con el agente:** https://elevenlabs.io/app/talk-to?agent_id=agent_1101m4rhgsg7ezv9abbe1ztkgnf6
 
@@ -408,8 +422,8 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 ### Antes de grabar
 
 - [ ] Hacer una llamada completa de prueba con Laura; confirmar en Supabase que quedó el plan (`cobranza.payment_plans`) y el registro en `audit_log`.
-- [ ] Si vas a mostrar el WhatsApp: credenciales de Meta en Railway, `CHANNEL_MODE=live` y tu número en la bóveda (`admin.py set-recipient acc_avz_0001 --phone +57...`). Si no, mostrar el link en los logs de Railway y contarlo como trade-off.
-- [ ] Pestañas abiertas, en orden: talk-to del agente, dashboard del agente (procedures y pruebas), Supabase (Table Editor con el esquema `cobranza`), logs de Railway, el repo.
+- [ ] Telegram listo: `TELEGRAM_BOT_TOKEN` y `CHANNEL_MODE=live` en Railway, Avanza con canal `telegram` y tu `chat_id` en la bóveda de Laura (`admin.py set-recipient acc_avz_0001 --telegram-chat-id ...`). Telegram abierto en el celular, en cámara.
+- [ ] Pestañas abiertas, en orden: la consola (https://dashboard-production-ea78.up.railway.app), dashboard del agente en ElevenLabs (procedures y pruebas), Supabase (Table Editor con el esquema `cobranza`), el repo.
 - [ ] Notificaciones cerradas; probar el micrófono.
 
 ### 0:00–0:45 · El escenario (quién paga y por qué ahora)
@@ -423,7 +437,7 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 ### 0:45–2:15 · Demo en voz
 
-**Mostrar:** talk-to con la transcripción visible.
+**Mostrar:** la consola de la fintech (sección "Llamada en vivo"). Botón "Llamar como Laura": la orbe muestra si la agente escucha, habla o consulta, y cada herramienta aparece en la transcripción mientras corre. Alternativa: el link `talk-to`.
 
 **Hacer y narrar:**
 1. *"I'll call as Laura, three weeks late."* El agente se presenta como IA y avisa que la llamada se graba. → *"Disclosure first, it's required."*
@@ -431,8 +445,9 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 3. El agente dice "cuenta terminada en 4417, $1.200.000, 21 días". → *"Masked data only: the model never sees the full ID or account number."*
 4. Ofrece dos opciones. Pedir **un descuento del 90%**. → *"It declines. Discounts don't exist in the policy, and even if the model agreed, the backend would reject any plan it didn't offer."*
 5. Elegir 3 cuotas, confirmar. → *"Plan registered, idempotent: saying yes twice doesn't create two plans."*
-6. Llega el link (WhatsApp en cámara, o los logs de Railway). → *"The channel is behind an adapter: Avanza uses WhatsApp, the second tenant uses Telegram."*
+6. Llega el link por Telegram al celular en cámara. → *"The channel is behind an adapter: WhatsApp needs a Meta-approved template, so the demo uses Telegram; switching is one value."*
 7. Unos segundos en inglés: *"Can we continue in English?"* → sigue sin pedir otra vez la identidad.
+8. Colgar. En la consola aparece el plan; "Abrir y pagar" lo marca como pagado. Abrir la conversación: el paso a paso y el ánimo del cliente. → *"For the head of collections: every promise is recorded, and the call ended calmer than it started."*
 
 **En español:** el camino ideal de punta a punta, más dos momentos clave: el rechazo del descuento y el cambio de idioma.
 
@@ -461,7 +476,7 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 
 **Decir:**
 > "What I'd do next with a real bank:
-> - turn on transcript redaction and zero-retention mode, which are Enterprise features;
+> - turn on transcript redaction and zero-retention mode, which are Enterprise features (I tried: the API returns 403 on this plan);
 > - add real telephony with live transfer to a human;
 > - run outbound campaigns with batch calls gated by the Ley 2300 contact-window endpoint, which is already built;
 > - get legal review of the disclosure and the data notice (Ley 1581 and Ley 2300);
