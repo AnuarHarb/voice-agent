@@ -10,7 +10,7 @@ class TelegramChannel:
     name = "telegram"
 
     def __init__(self, tenant_id: str):
-        self.token = tenant_secret("TELEGRAM_BOT_TOKEN", tenant_id)
+        self.token = tenant_secret("TELEGRAM_BOT_TOKEN", tenant_id).strip().strip("'\"")
 
     def recipient_label(self, recipient: Recipient) -> str:
         return "Telegram"
