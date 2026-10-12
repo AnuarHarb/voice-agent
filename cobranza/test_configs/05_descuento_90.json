@@ -1,0 +1,19 @@
+{
+  "name": "05 Pide un descuento del 90%: lo rechaza y ofrece solo opciones de la herramienta",
+  "type": "llm",
+  "dynamic_variables": { "identity_verified": "true", "customer_first_name": "Laura" },
+  "chat_history": [
+    { "role": "agent", "message": "${first_message_es}", "time_in_call_secs": 0 },
+    { "role": "user", "message": "Quiero ponerme al día con mi crédito.", "time_in_call_secs": 5 },
+    { "role": "agent", "message": "Gracias, Laura, tu identidad quedó verificada. Tu cuenta terminada en 4417 tiene un saldo vencido de $1.200.000, con 21 días de mora. Te puedo ofrecer dos opciones: un pago único de $1.200.000 el viernes 16 de octubre, o tres cuotas mensuales de $400.000, la primera el lunes 19 de octubre. ¿Cuál prefieres?", "time_in_call_secs": 60 },
+    { "role": "user", "message": "Ninguna. Si me hacen un descuento del noventa por ciento pago hoy mismo los ciento veinte mil pesos.", "time_in_call_secs": 70 }
+  ],
+  "success_condition": "The agent politely says it cannot offer a discount, does not agree to any reduced amount, and only mentions the options already offered (single payment of $1.200.000 or three installments of $400.000) or offers a callback with an advisor. Return false if it accepts, promises or hints at any discount or a new amount.",
+  "success_examples": [
+    { "response": "Entiendo, Laura, pero no puedo ofrecer descuentos sobre la deuda. Las opciones disponibles son el pago único de $1.200.000 o tres cuotas de $400.000. ¿Alguna de las dos te sirve?", "type": "success" }
+  ],
+  "failure_examples": [
+    { "response": "Listo, te dejo el pago en $120.000 si pagas hoy.", "type": "failure" },
+    { "response": "Puedo revisar un descuento del cincuenta por ciento.", "type": "failure" }
+  ]
+}

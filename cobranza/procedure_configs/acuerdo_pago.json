@@ -1,0 +1,40 @@
+{
+  "name": "Acuerdo de pago",
+  "type": "deterministic",
+  "trigger": "A customer whose identity is already verified wants to pay, get up to date, catch up on overdue installments, or agree on a payment plan.",
+  "steps": [
+    { "type": "tool_call", "tool": "get_account_summary", "on_failure": "retry_then_escalate" },
+    { "type": "tell", "instruction": "Tell the customer the account status using only the tool result: the account's last four digits, the overdue amount and how many days late it is. Mention the total balance only if they ask." },
+    { "type": "tool_call", "tool": "get_payment_options", "on_failure": "retry_then_escalate" },
+    { "type": "tell", "instruction": "Present at most two options from get_payment_options, with their amounts, number of installments and first due date exactly as returned. Offer an option marked hardship only if the customer described financial hardship such as job loss, illness or an emergency." },
+    { "type": "ask", "instruction": "Ask which of the options the customer prefers." },
+    { "type": "ask", "instruction": "Repeat out loud the chosen option's installment amount, number of installments and first due date, and ask the customer to confirm. A valid answer is a clear yes or no." },
+    {
+      "type": "branch",
+      "branches": [
+        {
+          "condition": { "type": "llm", "condition": "The customer clearly confirmed the payment plan that was just repeated to them." },
+          "steps": [
+            {
+              "type": "tool_call",
+              "tool": "create_payment_plan",
+              "instruction": "Use the plan_id of the option the customer confirmed, exactly as returned by get_payment_options.",
+              "on_failure": "retry_then_escalate"
+            },
+            { "type": "tool_call", "tool": "send_payment_link", "on_failure": "retry_then_escalate" },
+            {
+              "type": "say",
+              "message": "Listo. Registré tu plan y te envié el link de pago por ${channel_label}. Ahí vas a ver el valor y la fecha de tu primera cuota.",
+              "message_translations": {
+                "en": { "value": "Done. I registered your plan and sent you the payment link by ${channel_label}. It shows the amount and the date of your first payment." }
+              }
+            }
+          ]
+        }
+      ],
+      "fallback": [
+        { "type": "tell", "instruction": "Tell the customer no plan was registered, and offer to review the options again or to have an advisor call them." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Escalamiento por falla técnica",
+  "type": "deterministic",
+  "trigger": "",
+  "steps": [
+    {
+      "type": "tool_call",
+      "tool": "request_callback",
+      "schema_overrides": {
+        "request_body.reason": { "source": "constant", "constant_value": "Falla técnica: una herramienta no respondió dos veces durante la llamada." },
+        "request_body.preferred_window": { "source": "constant", "constant_value": "siguiente día hábil" }
+      },
+      "on_failure": {
+        "branches": [],
+        "fallback": [
+          {
+            "type": "say",
+            "message": "Sigo teniendo una falla técnica, así que no voy a adivinar ningún dato de tu cuenta. Por favor vuelve a llamarnos más tarde. Disculpa las molestias.",
+            "message_translations": {
+              "en": { "value": "I'm still having a technical problem, so I won't guess any of your account details. Please call us again later. Sorry for the inconvenience." }
+            }
+          },
+          { "type": "system_tool", "system_tool_name": "end_call" }
+        ]
+      }
+    },
+    {
+      "type": "say",
+      "message": "No pude completar la consulta por una falla técnica. Dejé registrado que un asesor de ${tenant_name} te llame el siguiente día hábil, dentro del horario legal. Disculpa las molestias.",
+      "message_translations": {
+        "en": { "value": "I couldn't complete the request because of a technical problem. I've arranged for a ${tenant_name} advisor to call you on the next business day, within legal hours. Sorry for the inconvenience." }
+      }
+    },
+    { "type": "system_tool", "system_tool_name": "end_call" }
+  ]
+}

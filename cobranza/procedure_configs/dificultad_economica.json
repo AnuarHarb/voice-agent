@@ -1,0 +1,6 @@
+{
+  "name": "Dificultad económica",
+  "type": "free_form",
+  "trigger": "The customer says they lost their job, are sick, have a family emergency, or cannot afford their payments right now.",
+  "content": "1. Acknowledge the situation with empathy in one or two short sentences. Do not pressure, do not mention consequences, and do not ask for details about their health or family.\n2. If identity is not verified yet, run [procedure id=\"${procedure:verificacion_identidad}\" name=\"Verificación de identidad\"] first.\n3. Run [procedure id=\"${procedure:acuerdo_pago}\" name=\"Acuerdo de pago\"]. The customer described hardship, so an option marked hardship may be offered, and it should be one of the two you present.\n4. If there is no hardship option, or the customer says no option is realistic for them, do not insist and do not improvise amounts. Run [procedure id=\"${procedure:escalamiento}\" name=\"Escalamiento a asesor\"] so an advisor can review relief options."
+}

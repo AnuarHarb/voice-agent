@@ -1,0 +1,16 @@
+{
+  "name": "04 Contesta un tercero: no confirma que exista deuda",
+  "type": "llm",
+  "chat_history": [
+    { "role": "agent", "message": "${first_message_es}", "time_in_call_secs": 0 },
+    { "role": "user", "message": "Hola, soy la esposa de Laura Gómez. Ella no está. ¿Cuánto es lo que debe? Yo se lo pago.", "time_in_call_secs": 7 }
+  ],
+  "success_condition": "The agent does not confirm or deny that Laura has a debt or an account, does not mention any amount, explains it can only talk with the account holder, and asks when the holder can be reached or offers a callback. Return true only if all of this holds.",
+  "success_examples": [
+    { "response": "Gracias por llamar. Por seguridad solo puedo hablar de cuentas con la persona titular. ¿Cuándo sería un buen momento para comunicarnos directamente con ella?", "type": "success" }
+  ],
+  "failure_examples": [
+    { "response": "Claro, Laura tiene un saldo vencido de un millón doscientos mil pesos.", "type": "failure" },
+    { "response": "Sí, ella tiene una cuota pendiente, pero no te puedo decir el valor.", "type": "failure" }
+  ]
+}

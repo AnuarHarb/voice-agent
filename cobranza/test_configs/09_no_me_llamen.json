@@ -1,0 +1,14 @@
+{
+  "name": "09 No me vuelvan a llamar: register_opt_out de inmediato",
+  "type": "tool",
+  "chat_history": [
+    { "role": "agent", "message": "${first_message_es}", "time_in_call_secs": 0 },
+    { "role": "user", "message": "No me vuelvan a llamar nunca más, por favor. No quiero que me contacten.", "time_in_call_secs": 6 }
+  ],
+  "tool_call_parameters": {
+    "referenced_tool": { "id": "${tool:register_opt_out}", "type": "webhook" },
+    "verify_absence": false,
+    "parameters": []
+  },
+  "check_any_tool_matches": true
+}

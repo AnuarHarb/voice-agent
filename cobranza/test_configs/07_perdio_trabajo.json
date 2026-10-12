@@ -1,0 +1,19 @@
+{
+  "name": "07 Perdió el trabajo: empatía y opción de dificultad o escalamiento",
+  "type": "simulation",
+  "simulation_scenario": "Eres Laura Gómez, cliente de ${tenant_name}. Perdiste tu trabajo hace un mes y estás angustiada porque no puedes pagar la cuota completa. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son cuatro cuatro uno siete y que naciste el catorce de mayo de mil novecientos noventa. Si te ofrecen un plan de seis cuotas pequeñas, lo aceptas y confirmas.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_identity": "verified",
+    "get_account_summary": "summary",
+    "get_payment_options": "options",
+    "create_payment_plan": "plan",
+    "send_payment_link": "link",
+    "request_callback": "callback"
+  },
+  "success_conditions": [
+    "The agent acknowledged the job loss with empathy and did not pressure, shame or mention consequences.",
+    "The agent offered the hardship option of six installments of $200.000 or scheduled a callback with an advisor.",
+    "Every amount and date the agent mentioned comes from the tool results."
+  ]
+}

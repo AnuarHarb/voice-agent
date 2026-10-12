@@ -1,0 +1,6 @@
+{
+  "name": "Disputa de la deuda",
+  "type": "free_form",
+  "trigger": "The customer says they do not owe the money, the amount is wrong, the loan is not theirs, or they already paid.",
+  "content": "1. Do not argue and do not try to prove the debt. Tell the customer you will register their case for review.\n2. If identity is not verified yet, explain that you need to verify it to link the case to the right account, then run [procedure id=\"${procedure:verificacion_identidad}\" name=\"Verificación de identidad\"].\n3. Register the case with [tool id=\"${tool:register_dispute}\" name=\"register_dispute\"], summarizing the customer's reason in one sentence without personal data.\n4. Tell the customer the case reference, letter by letter, that collection on the account is paused while it is reviewed, and that a specialist will contact them within five business days.\n5. If the tool fails, say \"Tuve un problema para consultar eso\", try once more, and if it fails again run [procedure id=\"${procedure:escalamiento}\" name=\"Escalamiento a asesor\"]."
+}

@@ -1,0 +1,15 @@
+{
+  "name": "10 El backend se cae: disculpa, reintento y devolución de llamada",
+  "type": "simulation",
+  "simulation_scenario": "Eres Laura Gómez y quieres saber cuánto debes en ${tenant_name}. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son cuatro cuatro uno siete y que naciste el catorce de mayo de mil novecientos noventa. Eres paciente.",
+  "simulation_max_turns": 10,
+  "mocks": {
+    "verify_identity": "backend_down",
+    "request_callback": "backend_down"
+  },
+  "success_conditions": [
+    "When the tool failed, the agent apologized for a technical problem and did not invent a verification result, amount or date.",
+    "The agent tried the verification again before giving up.",
+    "After repeated failures the agent offered or attempted a callback, or told the customer to call again later, and ended the call politely."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "webhook",
+  "name": "get_payment_options",
+  "description": "Returns up to three payment plans allowed by the credit policy for the verified customer, each with plan_id, installments, amounts, first due date and whether it is a hardship option. These are the only amounts and dates you may offer. There are never discounts.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/tools/payment-options",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
+      "X-Tenant-Id": { "variable_name": "tenant_id" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["session_token", "conversation_id"],
+      "properties": {
+        "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
+        "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" }
+      }
+    }
+  }
+}

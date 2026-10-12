@@ -1,0 +1,17 @@
+{
+  "name": "08 Disputa la deuda: register_dispute",
+  "type": "tool",
+  "dynamic_variables": { "identity_verified": "true", "customer_first_name": "Laura", "${session_var}": "st_mock_session_token_for_tests_0001" },
+  "chat_history": [
+    { "role": "agent", "message": "${first_message_es}", "time_in_call_secs": 0 },
+    { "role": "user", "message": "Me llamaron por una deuda.", "time_in_call_secs": 5 },
+    { "role": "agent", "message": "Gracias, Laura, tu identidad quedó verificada. ¿En qué te puedo ayudar con tu cuenta?", "time_in_call_secs": 50 },
+    { "role": "user", "message": "Esa cuota de septiembre yo ya la pagué en Efecty, esa deuda no es correcta. Quiero que lo revisen.", "time_in_call_secs": 58 }
+  ],
+  "tool_call_parameters": {
+    "referenced_tool": { "id": "${tool:register_dispute}", "type": "webhook" },
+    "verify_absence": false,
+    "parameters": []
+  },
+  "check_any_tool_matches": true
+}

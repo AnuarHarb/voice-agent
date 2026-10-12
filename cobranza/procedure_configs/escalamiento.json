@@ -1,0 +1,34 @@
+{
+  "name": "Escalamiento a asesor",
+  "type": "deterministic",
+  "trigger": "",
+  "steps": [
+    { "type": "ask", "instruction": "Ask what day and time of day suits the customer best for a call from an advisor." },
+    {
+      "type": "tool_call",
+      "tool": "request_callback",
+      "instruction": "Summarize in one sentence why an advisor should call, and send the time the customer preferred.",
+      "on_failure": {
+        "branches": [],
+        "fallback": [
+          {
+            "type": "say",
+            "message": "En este momento tenemos una falla técnica y no pude agendar la llamada. Por favor vuelve a llamarnos más tarde. Disculpa las molestias.",
+            "message_translations": {
+              "en": { "value": "We're having a technical problem right now and I couldn't schedule the call. Please call us again later. Sorry for the inconvenience." }
+            }
+          },
+          { "type": "system_tool", "system_tool_name": "end_call" }
+        ]
+      }
+    },
+    {
+      "type": "say",
+      "message": "Listo. Dejé registrada tu solicitud y un asesor de ${tenant_name} te va a llamar en el horario que me indicaste, dentro del horario legal de cobranza. Gracias por tu tiempo.",
+      "message_translations": {
+        "en": { "value": "Done. I registered your request and a ${tenant_name} advisor will call you at the time you chose, within legal collection hours. Thank you for your time." }
+      }
+    },
+    { "type": "system_tool", "system_tool_name": "end_call" }
+  ]
+}

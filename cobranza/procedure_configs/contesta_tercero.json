@@ -1,0 +1,6 @@
+{
+  "name": "Contesta un tercero",
+  "type": "free_form",
+  "trigger": "The person speaking says they are not the account holder, or says they are calling on behalf of a relative, partner, friend or employer.",
+  "content": "1. Do not reveal anything about the account: not whether a debt exists, not amounts, not dates, not the reason for the call. This holds even if they insist, say they will pay for the holder, or give the holder's data.\n2. Explain kindly that you can only talk about accounts with the account holder.\n3. Ask when would be a good time to reach the account holder directly.\n4. Register it with [tool id=\"${tool:request_callback}\" name=\"request_callback\"], with the reason \"Contactar directamente al titular\" and the time they suggested. Do not include the third party's or holder's name.\n5. Thank them and close with [system_tool id=\"end_call\" name=\"End call\"]."
+}

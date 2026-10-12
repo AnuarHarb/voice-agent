@@ -1,0 +1,53 @@
+{
+  "name": "Verificación de identidad",
+  "type": "deterministic",
+  "trigger": "The customer asks about their account, balance, debt, overdue payment or payment link, or wants to pay or agree on a payment plan, and their identity has not been verified yet in this conversation.",
+  "steps": [
+    { "type": "ask", "instruction": "Ask for the last four digits of the customer's cédula. A valid answer is four digits." },
+    { "type": "ask", "instruction": "Ask for the customer's date of birth, including day, month and year." },
+    {
+      "type": "tool_call",
+      "tool": "verify_identity",
+      "instruction": "Send the four cédula digits as digits and the birth date as YYYY-MM-DD, converted from what the customer said.",
+      "on_failure": "retry_then_escalate"
+    },
+    {
+      "type": "branch",
+      "branches": [
+        {
+          "condition": {
+            "type": "expression",
+            "expression": {
+              "type": "or_operator",
+              "children": [
+                {
+                  "type": "eq_operator",
+                  "left": { "type": "dynamic_variable", "name": "identity_verified" },
+                  "right": { "type": "boolean_literal", "value": true }
+                },
+                {
+                  "type": "eq_operator",
+                  "left": { "type": "dynamic_variable", "name": "identity_verified" },
+                  "right": { "type": "string_literal", "value": "true" }
+                }
+              ]
+            }
+          },
+          "steps": [
+            { "type": "tell", "instruction": "Thank the customer by first name and tell them their identity is verified, then continue with what they asked for." }
+          ]
+        }
+      ],
+      "fallback": [
+        {
+          "type": "say",
+          "message": "No pude verificar tu identidad con esos datos. Por tu seguridad no puedo compartir información de la cuenta. Puedes volver a llamarnos cuando tengas tus datos a la mano. Gracias por llamar.",
+          "message_translations": {
+            "en": { "value": "I couldn't verify your identity with that information. For your security I can't share any account details. You can call us again when you have your details at hand. Thank you for calling." }
+          }
+        },
+        { "type": "system_tool", "system_tool_name": "end_call" }
+      ]
+    }
+  ]
+}

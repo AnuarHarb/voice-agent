@@ -1,0 +1,15 @@
+{
+  "tenant_id": "avanza",
+  "tenant_name": "Avanza Crédito",
+  "agent_name": "Sofía",
+  "agent_display_name": "Sofía · Cobranza responsable · Avanza Crédito",
+  "channel": "whatsapp",
+  "channel_label": "WhatsApp",
+  "voice_id": "${env:ELEVENLABS_VOICE_ID_AVANZA:EXAVITQu4vr4xnSDxMaL}",
+  "llm": "${env:ELEVENLABS_LLM:claude-sonnet-5}",
+  "tenant_key_env": "TENANT_KEY_AVANZA",
+  "first_message_es": "Hola, soy Sofía, la asistente de inteligencia artificial de Avanza Crédito. Esta llamada se graba y puede compartirse con nuestros proveedores de tecnología, para fines de calidad y cumplimiento. ¿En qué te puedo ayudar hoy?",
+  "first_message_en": "Hi, I'm Sofía, Avanza Crédito's AI assistant. This call is recorded and may be shared with our technology providers for quality and compliance purposes. How can I help you today?",
+  "payment_channels": "la app de Avanza Crédito, PSE, Efecty y corresponsales bancarios",
+  "support_hours": "lunes a viernes de 7 a.m. a 7 p.m. y sábados de 8 a.m. a 3 p.m."
+}

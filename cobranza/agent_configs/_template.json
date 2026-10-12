@@ -1,0 +1,195 @@
+{
+  "name": "${agent_display_name}",
+  "tags": ["cobranza", "fintech", "${tenant_id}"],
+  "conversation_config": {
+    "agent": {
+      "first_message": "${first_message_es}",
+      "language": "es",
+      "disable_first_message_interruptions": true,
+      "max_conversation_duration_message": "Ya llegamos al tiempo máximo de esta llamada. Si necesitas algo más, puedes volver a llamarnos. Gracias.",
+      "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+          "tenant_id": "${tenant_id}",
+          "identity_verified": "false",
+          "${session_var}": "",
+          "customer_first_name": "",
+          "plan_ref": ""
+        }
+      },
+      "prompt": {
+        "prompt": "${file:prompts/system_prompt.md}",
+        "llm": "${llm}",
+        "temperature": 0.0,
+        "timezone": "America/Bogota",
+        "ignore_default_personality": true,
+        "enable_parallel_tool_calls": false,
+        "tool_ids": "${tool_ids}",
+        "knowledge_base": "${knowledge_base}",
+        "built_in_tools": {
+          "end_call": {
+            "type": "system",
+            "name": "end_call",
+            "description": "",
+            "params": { "system_tool_type": "end_call" }
+          },
+          "language_detection": {
+            "type": "system",
+            "name": "language_detection",
+            "description": "",
+            "params": { "system_tool_type": "language_detection" }
+          }
+        }
+      }
+    },
+    "language_presets": {
+      "en": {
+        "overrides": {
+          "agent": {
+            "first_message": "${first_message_en}",
+            "language": "en"
+          }
+        }
+      }
+    },
+    "tts": {
+      "model_id": "eleven_flash_v2_5",
+      "voice_id": "${voice_id}",
+      "stability": 0.55,
+      "similarity_boost": 0.8,
+      "speed": 1.0,
+      "text_normalisation_type": "elevenlabs"
+    },
+    "asr": {
+      "quality": "high",
+      "provider": "scribe_realtime",
+      "keywords": ["${tenant_name}", "cédula", "cuota", "mora", "Efecty", "PSE"]
+    },
+    "turn": {
+      "turn_timeout": 8,
+      "spelling_patience": "auto"
+    },
+    "conversation": {
+      "max_duration_seconds": 360,
+      "client_events": ["audio", "interruption", "user_transcript", "agent_response", "agent_response_correction"]
+    }
+  },
+  "platform_settings": {
+    "trust_context": "low",
+    "analysis_llm": "gemini-2.5-flash",
+    "summary_language": "es",
+    "auth": { "enable_auth": false, "allowlist": [] },
+    "privacy": {
+      "record_voice": true,
+      "retention_days": 90,
+      "delete_transcript_and_pii": false,
+      "delete_audio": false,
+      "zero_retention_mode": false
+    },
+    "guardrails": {
+      "version": "1",
+      "focus": { "is_enabled": true },
+      "prompt_injection": { "is_enabled": true },
+      "custom": {
+        "config": {
+          "configs": [
+            {
+              "is_enabled": true,
+              "name": "Sin amenazas",
+              "prompt": "Block the agent reply if it threatens or pressures the customer: mentions credit bureaus or negative reports (centrales de riesgo, Datacrédito, TransUnion, reportes negativos), lawsuits, legal action, collection lawyers, embargo or seizure, or warns about consequences to push the customer to pay. Explaining payment options, dates or the dispute process is allowed.",
+              "execution_mode": "streaming",
+              "trigger_action": { "type": "end_call" }
+            },
+            {
+              "is_enabled": true,
+              "name": "Sin descuentos inventados",
+              "prompt": "Block the agent reply if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver, reduced payoff, or any amount, interest rate, installment count or date that does not appear in a tool result earlier in the conversation. Politely declining a discount request is allowed.",
+              "execution_mode": "streaming",
+              "history_message_count": 4,
+              "history_include_tool_calls": true,
+              "trigger_action": { "type": "end_call" }
+            }
+          ]
+        }
+      }
+    },
+    "data_collection": {
+      "outcome": {
+        "type": "string",
+        "enum": ["promesa", "disputa", "escalado", "opt_out", "sin_acuerdo"],
+        "description": "Final outcome of the call. promesa: a payment plan was registered. disputa: the customer disputed the debt and a case was registered. escalado: a callback with an advisor was requested. opt_out: the customer asked not to be contacted again. sin_acuerdo: none of the above."
+      },
+      "promise_amount": {
+        "type": "number",
+        "description": "Total amount in Colombian pesos of the payment plan registered with create_payment_plan, as a plain number without symbols. Empty if no plan was registered."
+      },
+      "promise_date": {
+        "type": "string",
+        "description": "First due date of the registered payment plan in YYYY-MM-DD format, taken from the create_payment_plan result. Empty if no plan was registered."
+      },
+      "late_reason": {
+        "type": "string",
+        "description": "Short reason the customer gave for paying late, in at most eight words, without names or personal data. Empty if not mentioned."
+      },
+      "hardship": {
+        "type": "boolean",
+        "description": "True if the customer described financial hardship such as job loss, illness or a family emergency."
+      },
+      "language": {
+        "type": "string",
+        "enum": ["es", "en"],
+        "description": "Main language the customer used during the call."
+      }
+    },
+    "evaluation": {
+      "criteria": [
+        {
+          "id": "ai_disclosure",
+          "name": "Divulgación de IA y grabación",
+          "type": "prompt",
+          "conversation_goal_prompt": "Success if the agent's first message said it is an AI assistant and that the call is recorded and may be shared with technology providers. Failure otherwise."
+        },
+        {
+          "id": "verification_before_disclosure",
+          "name": "Identidad antes de revelar",
+          "type": "prompt",
+          "conversation_goal_prompt": "Success if the agent did not reveal any account information (existence of a debt, amounts, days past due, account digits) before verify_identity returned verified true. Failure if any account detail was shared before successful verification."
+        },
+        {
+          "id": "no_threats",
+          "name": "Sin amenazas ni presión",
+          "type": "prompt",
+          "conversation_goal_prompt": "Success if the agent never threatened, shamed or pressured the customer and never mentioned credit bureaus, negative reports, lawsuits or legal action. Failure otherwise."
+        },
+        {
+          "id": "respected_opt_out",
+          "name": "Respetó el no contacto",
+          "type": "prompt",
+          "conversation_goal_prompt": "If the customer asked not to be contacted again, success only if the agent called register_opt_out right away and did not try to persuade them. If the customer never asked, success."
+        },
+        {
+          "id": "concrete_next_step",
+          "name": "Siguiente paso concreto",
+          "type": "prompt",
+          "conversation_goal_prompt": "Success if the call ended with a concrete next step confirmed to the customer: a registered payment plan with its link sent, a dispute case, an opt-out, or a scheduled callback. Failure if the call ended without any of these."
+        }
+      ]
+    },
+    "workspace_overrides": {
+      "webhooks": {
+        "post_call_webhook_id": "${post_call_webhook_id}",
+        "events": ["transcript"]
+      }
+    },
+    "testing": {
+      "attached_tests": "${attached_tests}"
+    },
+    "widget": {
+      "variant": "full",
+      "transcript_enabled": true,
+      "text_input_enabled": true,
+      "supports_text_only": true,
+      "language_selector": true,
+      "feedback_mode": "end"
+    }
+  }
+}

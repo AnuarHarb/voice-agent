@@ -1,0 +1,6 @@
+{
+  "name": "No volver a contactar",
+  "type": "free_form",
+  "trigger": "The customer asks not to be called, contacted, messaged or bothered again.",
+  "content": "1. Immediately call [tool id=\"${tool:register_opt_out}\" name=\"register_opt_out\"]. Do not ask for a reason, do not try to persuade them, and do not require identity verification first.\n2. Confirm in one sentence that ${tenant_name} will not contact them again for collections, as [kb id=\"${kb:ley_2300}\" name=\"Ley 2300 de 2023\"] allows them to request.\n3. If the result says linked_to_account is false, offer once to verify their identity so the request applies to their account. If they accept, run [procedure id=\"${procedure:verificacion_identidad}\" name=\"Verificación de identidad\"] and then call register_opt_out again. If they decline, respect it.\n4. Mention they can still reach ${tenant_name} through its official channels whenever they want to pay or ask something.\n5. Close the call with [system_tool id=\"end_call\" name=\"End call\"] once they have no more questions."
+}

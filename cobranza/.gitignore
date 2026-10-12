@@ -1,0 +1,10 @@
+# Credentials — never commit these. Use .env.example as the tracked template.
+.env
+.env.*
+!.env.example
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+build/
+deploy_state.json

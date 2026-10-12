@@ -1,0 +1,15 @@
+{
+  "tenant_id": "nexo",
+  "tenant_name": "Nexo Finanzas",
+  "agent_name": "Valentina",
+  "agent_display_name": "Valentina · Cobranza responsable · Nexo Finanzas",
+  "channel": "telegram",
+  "channel_label": "Telegram",
+  "voice_id": "${env:ELEVENLABS_VOICE_ID_NEXO:XrExE9yKIg1WjnnlVkGX}",
+  "llm": "${env:ELEVENLABS_LLM:claude-sonnet-5}",
+  "tenant_key_env": "TENANT_KEY_NEXO",
+  "first_message_es": "Hola, soy Valentina, la asistente de inteligencia artificial de Nexo Finanzas. Esta llamada se graba y puede compartirse con nuestros proveedores de tecnología, para fines de calidad y cumplimiento. ¿En qué te puedo ayudar hoy?",
+  "first_message_en": "Hi, I'm Valentina, Nexo Finanzas' AI assistant. This call is recorded and may be shared with our technology providers for quality and compliance purposes. How can I help you today?",
+  "payment_channels": "la app de Nexo Finanzas y PSE",
+  "support_hours": "lunes a viernes de 7 a.m. a 7 p.m. y sábados de 8 a.m. a 3 p.m."
+}

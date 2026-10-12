@@ -1,0 +1,34 @@
+{
+  "type": "webhook",
+  "name": "request_callback",
+  "description": "Schedules a call from a human advisor: financial hardship without a policy option, the customer asks for a person, a third party asks to reach the account holder, or anything you cannot resolve. Works without identity verification.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/tools/callbacks",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
+      "X-Tenant-Id": { "variable_name": "tenant_id" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["reason", "preferred_window", "session_token", "conversation_id"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "One sentence in Spanish on why an advisor should call, without names, ID numbers or other personal data."
+        },
+        "preferred_window": {
+          "type": "string",
+          "description": "When the customer prefers the call, in Spanish, for example \"mañana en la mañana\". If they did not say, use \"siguiente día hábil\"."
+        },
+        "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
+        "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" }
+      }
+    }
+  }
+}

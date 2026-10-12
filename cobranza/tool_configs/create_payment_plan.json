@@ -1,0 +1,34 @@
+{
+  "type": "webhook",
+  "name": "create_payment_plan",
+  "description": "Registers the payment plan the customer chose and confirmed out loud. Only call it after the customer confirmed the amount and dates. Returns a plan_ref.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "force",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "assignments": [
+    { "source": "response", "dynamic_variable": "plan_ref", "value_path": "plan_ref" }
+  ],
+  "api_schema": {
+    "url": "${backend_url}/tools/payment-plans",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
+      "X-Tenant-Id": { "variable_name": "tenant_id" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["session_token", "plan_id", "idempotency_key", "conversation_id"],
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "description": "The plan_id exactly as returned by get_payment_options for the option the customer confirmed, for example \"pln_7K3Q9XZM2A4B\"."
+        },
+        "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
+        "idempotency_key": { "type": "string", "dynamic_variable": "system__conversation_id" },
+        "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" }
+      }
+    }
+  }
+}
