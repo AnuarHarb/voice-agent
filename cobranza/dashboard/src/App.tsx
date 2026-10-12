@@ -3,8 +3,11 @@ import { api, type Overview, type Tenant } from './api'
 import { Cases } from './components/Cases'
 import { Conversations } from './components/Conversations'
 import { Customers } from './components/Customers'
+import { LiveCall } from './components/LiveCall'
 import { Plans } from './components/Plans'
-import { clock, money, talkUrl } from './format'
+import { ShimmeringText } from '@/components/ui/shimmering-text'
+import { clock, money } from './format'
+import { useLiveCall } from './live'
 
 const REFRESH_MS = 10_000
 const AGENT_NAME: Record<string, string> = { avanza: 'Sofía', nexo: 'Horacio' }
@@ -84,12 +87,24 @@ export default function App() {
   const agentName = AGENT_NAME[tenant] ?? 'el agente'
   const shown = data?.tenant.id === tenant ? data : null
 
+  const call = useLiveCall(current?.agent_id ?? undefined, () => {
+    load()
+    setTimeout(() => load(), 4000)
+  })
+  const inCall = call.status === 'connected' || call.status === 'connecting'
+  const showLive = () => document.getElementById('en-vivo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const callAs = (customer: Parameters<typeof call.start>[0]) => {
+    showLive()
+    call.start(customer)
+  }
+
   useEffect(() => {
     if (current) document.title = `Mesa de cobranza de ${current.name}`
   }, [current])
 
   const choose = (id: string) => (event: React.MouseEvent) => {
     event.preventDefault()
+    if (inCall) call.end()
     history.pushState(null, '', `?fintech=${id}`)
     setTenant(id)
   }
@@ -116,13 +131,12 @@ export default function App() {
 
       <main>
         <section className="intro" aria-label="Resumen">
-          {shown ? <Summary data={shown} /> : <p className="lede muted">Cargando {current?.name ?? 'la fintech'}…</p>}
+          {shown ? (
+            <Summary data={shown} />
+          ) : (
+            <p className="lede"><ShimmeringText text={`Cargando ${current?.name ?? 'la fintech'}…`} /></p>
+          )}
           <div className="controls">
-            {current?.agent_id && (
-              <a className="call" href={talkUrl(current.agent_id)} target="_blank" rel="noreferrer">
-                Llamar a {agentName}
-              </a>
-            )}
             <label>
               <input type="checkbox" checked={includeTests} onChange={(e) => setIncludeTests(e.target.checked)} />
               Incluir pruebas automáticas
@@ -137,7 +151,8 @@ export default function App() {
 
         {shown && (
           <>
-            <Customers customers={shown.customers} agentName={agentName} />
+            {current?.agent_id && <LiveCall call={call} tenant={tenant} agentName={agentName} />}
+            <Customers customers={shown.customers} agentName={agentName} onCall={inCall ? undefined : callAs} />
             <Plans plans={shown.plans} />
             <Conversations tenant={tenant} conversations={shown.conversations} />
             <Cases cases={shown.cases} />

@@ -1,7 +1,10 @@
+import { PhoneIcon } from 'lucide-react'
 import type { Customer } from '../api'
 import { ACCOUNT_STATUS, longDate, money, spokenDigits } from '../format'
 
-export function Customers({ customers, agentName }: { customers: Customer[]; agentName: string }) {
+type Props = { customers: Customer[]; agentName: string; onCall?: (customer: Customer) => void }
+
+export function Customers({ customers, agentName, onCall }: Props) {
   return (
     <section className="block" aria-labelledby="clientes">
       <header className="block-head">
@@ -35,6 +38,11 @@ export function Customers({ customers, agentName }: { customers: Customer[]; age
               <p className="say">
                 Di: «{spokenDigits(c.national_id.slice(-4))}» y «{longDate(c.birth_date)}».
               </p>
+              {onCall && !c.opted_out && (
+                <button type="button" className="ghost call-as" onClick={() => onCall(c)}>
+                  <PhoneIcon aria-hidden="true" /> Llamar como {c.full_name.split(' ')[0]}
+                </button>
+              )}
 
               <dl className="debt">
                 <div>

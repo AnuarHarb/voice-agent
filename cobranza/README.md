@@ -111,6 +111,10 @@ It refreshes every 10 seconds and switches between tenants.
   integration role cannot, but RLS still scopes each query to one tenant and the role cannot write.
   Set its password with `alter role cobranza_console password '...'` and put the URL in `CONSOLE_DATABASE_URL`.
 - The console has no login and shows full IDs of fictional customers. Do not point it at real data.
+- "Llamada en vivo" calls the agent from the browser with `@elevenlabs/react` and [ElevenLabs UI](https://ui.elevenlabs.io)
+  components (Orb, Conversation, Message, ShimmeringText, vendored in `src/components/ui/`). The agents send
+  `agent_tool_request` / `agent_tool_response` client events so the transcript shows each tool step. Every call
+  spends ElevenLabs credits.
 
 ```sh
 cd dashboard

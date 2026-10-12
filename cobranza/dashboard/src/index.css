@@ -66,11 +66,16 @@ code { font-size: 0.92em; }
 .controls { display: grid; gap: 0.75rem; justify-items: start; font-size: var(--step--1); }
 .controls label { display: flex; gap: 0.5rem; align-items: center; cursor: pointer; }
 .controls input { accent-color: var(--accent); width: 1.1rem; height: 1.1rem; }
-.call {
-  display: inline-block; padding: 0.7rem 1.2rem; border-radius: 0.5rem; background: var(--accent);
-  color: #fff; font-weight: 650; font-size: var(--step-0); text-decoration: none;
+.call, .ghost {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.2rem; border-radius: 0.5rem;
+  border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  font: inherit; font-weight: 650; text-decoration: none; cursor: pointer;
 }
 .call:hover { filter: brightness(1.1); }
+.call svg, .ghost svg { width: 1.1em; height: 1.1em; }
+.ghost { background: var(--surface); color: var(--accent); }
+.ghost:hover { background: var(--accent-soft); }
+.hang-up { background: var(--warn); border-color: var(--warn); }
 
 .muted { color: var(--muted); }
 .error { color: var(--warn); }
@@ -103,6 +108,39 @@ code { font-size: 0.92em; }
   border-radius: 0.2em; font-weight: 750;
 }
 .say { font-size: var(--step--1); color: var(--muted); }
+.call-as { justify-self: start; padding: 0.45rem 0.9rem; font-size: var(--step--1); }
+
+/* live call: the orb is the agent, the log beside it is what both sides said */
+.live-grid {
+  display: grid; grid-template-columns: 20rem minmax(0, 1fr);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 0.75rem; overflow: hidden;
+}
+.live-agent {
+  display: grid; justify-items: center; align-content: start; gap: 1rem; padding: 1.75rem 1.25rem;
+  background: linear-gradient(to bottom, var(--accent-soft), var(--surface));
+}
+.orb {
+  width: 13rem; aspect-ratio: 1; border-radius: 50%;
+  box-shadow: 0 1.25rem 3rem -1rem color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.live-status { min-height: 1.5em; font-weight: 600; text-align: center; }
+.live-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.caller {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 1rem; width: 100%;
+  padding: 0.75rem 1rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 0.5rem;
+  font-size: var(--step--1);
+}
+.caller div { display: contents; }
+.caller dt { color: var(--muted); }
+.caller dd { font-weight: 650; }
+.transcript { height: 26rem; border-left: 1px solid var(--rule); }
+.transcript-content { display: grid; align-content: start; padding: 1rem 1.25rem; }
+.transcript-empty { align-self: center; justify-self: center; max-width: 34ch; margin-top: 9rem; color: var(--muted); text-align: center; }
+.tool-step {
+  justify-self: center; margin: 0.35rem 0; padding: 0.2rem 0.75rem; border-radius: 999px;
+  background: var(--paper); color: var(--accent); font-size: var(--step--1); font-weight: 600;
+}
+.tool-step.is-error { color: var(--warn); }
 
 .debt { display: grid; grid-template-columns: repeat(3, auto); gap: 0.25rem 1rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 .debt dt { color: var(--muted); font-size: var(--step--1); }
@@ -179,6 +217,9 @@ tbody th { font-weight: 650; }
   .conversations summary > .muted { display: none; }
   .events li { grid-template-columns: 1fr; }
   .events dl { grid-column: 1; }
+  .live-grid { grid-template-columns: 1fr; }
+  .orb { width: 9rem; }
+  .transcript { height: 20rem; border-left: 0; border-top: 1px solid var(--rule); }
 }
 
 @media (prefers-reduced-motion: reduce) {

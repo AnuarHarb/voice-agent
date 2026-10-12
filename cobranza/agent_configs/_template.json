@@ -72,7 +72,7 @@
     },
     "conversation": {
       "max_duration_seconds": 360,
-      "client_events": ["audio", "interruption", "user_transcript", "agent_response", "agent_response_correction"]
+      "client_events": ["audio", "interruption", "user_transcript", "agent_response", "agent_response_correction", "agent_tool_request", "agent_tool_response"]
     }
   },
   "platform_settings": {
