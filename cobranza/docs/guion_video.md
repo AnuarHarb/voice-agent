@@ -419,8 +419,13 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
 **30. El sonido de "tecleo" estaba configurado, pero no se oía.**
 - **Síntoma:** la agente decía "voy a revisar tu crédito" y en menos de medio segundo ya estaba dando el resultado.
 - **Causa:** las herramientas corrían en modo `immediate`, en paralelo con la frase puente. El backend responde antes de que termine la frase, y el sonido de tecleo solo suena mientras la herramienta corre, así que no le quedaba tiempo.
-- **Arreglo:** `execution_mode: "post_tool_speech"` en las 8 herramientas. La herramienta espera a que la agente termine la frase y el tecleo llena el tiempo de la consulta y de la respuesta.
-- **Por qué no una demora artificial en el backend:** el modo de ejecución resuelve el problema donde nace, en el orden de los eventos, sin hacer más lento el sistema para nadie.
+- **Intento:** `execution_mode: "post_tool_speech"` en las 8 herramientas, para que la herramienta espere a que termine la frase puente y el tecleo llene el tiempo.
+- **Lo que pasó en las llamadas de voz:** empeoró todo.
+  - Cada herramienta pasó de menos de 1 segundo a entre 3 y 6. Eso disparó la frase de espera, y cada respuesta empezaba con "Un momento.".
+  - En Horacio, el paso de herramienta dentro del procedure de verificación nunca llamó a `verify_identity`. El procedure lo tomó como falla, reintentó y terminó en "falla técnica" con un asesor.
+  - En Sofía, con las respuestas encadenadas, dijo "para mañana, sábado diecisiete de octubre". "Mañana" era inventado, y el guardrail de montos y fechas cortó la llamada. El guardrail hizo su trabajo.
+- **Arreglo:** volver a `immediate`, que es lo que funcionaba. Además, el prompt principal ahora prohíbe fechas relativas ("hoy", "mañana"), porque el agente no sabe qué día es. La regla de no contar las opciones pasó del procedure al prompt principal, porque solo en el procedure no se cumplía.
+- **Lección:** las 22 pruebas pasaron con el cambio, porque evalúan texto y no tiempos. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
 
 ---
 
