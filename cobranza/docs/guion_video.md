@@ -171,7 +171,7 @@ El agente no se configuró a mano en el dashboard: está en archivos JSON dentro
 | Ajuste | Valor | Por qué |
 | --- | --- | --- |
 | Modelo | `claude-haiku-4-5` | Tras la primera llamada real se bajó de `claude-sonnet-5` a Haiku por latencia y costo; las reglas duras viven en procedimientos, backend y guardrails, no en el modelo. Se cambia con `ELEVENLABS_LLM` |
-| Voz | `eleven_v4_turbo`, modo expresivo, velocidad 0.95 | Más natural y un poco más pausada para montos y fechas |
+| Voz | `eleven_v4_turbo`, modo expresivo, velocidad 1.0 | Más natural. Se probó 0.95 para montos y fechas, pero en voz se sentía lento; la claridad la dan las frases cortas, un monto por frase |
 | Idioma | Español, con preset en inglés y detección de idioma | Clientes que prefieren inglés |
 | Primer mensaje | Divulgación de IA y grabación | Requisito de ElevenLabs antes de interactuar |
 | `trust_context` | `low` | El usuario es externo y no confiable |
@@ -370,7 +370,7 @@ Cada error tiene el mismo formato: **síntoma → causa → arreglo → por qué
   - el procedimiento ahora **se detiene** después del estado de cuenta y pregunta si el cliente quiere revisar las opciones;
   - máximo dos frases por respuesta, un solo anuncio antes de cada herramienta, un monto o fecha por frase;
   - no decir cuántas opciones existen ("tengo tres opciones" cuando solo se presentan dos confundía);
-  - la voz baja a velocidad 0.95.
+  - la voz bajó a velocidad 0.95 (después se devolvió a 1.0: en una llamada se sentía lenta, y las frases cortas ya resolvían la claridad).
 - **Por qué no meter demoras artificiales en el backend:** alargar la espera no le da al cliente el turno de hablar; el problema era de turnos, no de silencio.
 
 **23. Cambios de configuración desde el dashboard.** Se cambió el modelo a `claude-haiku-4-5`, la voz y el TTS a `eleven_v4_turbo` desde la interfaz de ElevenLabs. Como el agente vive en código, esos cambios se llevaron a la plantilla; si no, el siguiente `push` los habría borrado. De paso apareció que la copia del OpenAPI de la CLI estaba desactualizada (no conocía `eleven_v4_turbo`), y el script pasó a validar contra el OpenAPI vivo de la API.

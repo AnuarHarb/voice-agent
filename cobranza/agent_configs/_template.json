@@ -59,7 +59,7 @@
       "expressive_mode": true,
       "stability": 0.55,
       "similarity_boost": 0.75,
-      "speed": 0.95,
+      "speed": 1.0,
       "text_normalisation_type": "elevenlabs"
     },
     "asr": {
