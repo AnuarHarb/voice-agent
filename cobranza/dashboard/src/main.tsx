@@ -5,11 +5,14 @@ import '@fontsource-variable/public-sans'
 import './tailwind.css'
 import './index.css'
 import App from './App.tsx'
+import { I18nProvider } from './I18nProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConversationProvider>
-      <App />
-    </ConversationProvider>
+    <I18nProvider>
+      <ConversationProvider>
+        <App />
+      </ConversationProvider>
+    </I18nProvider>
   </StrictMode>,
 )

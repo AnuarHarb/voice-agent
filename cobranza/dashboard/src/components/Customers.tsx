@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PhoneIcon, UserPlusIcon } from 'lucide-react'
 import { api, type Customer } from '../api'
-import { ACCOUNT_STATUS, longDate, money, spokenDigits } from '../format'
+import { useI18n } from '../i18n'
 
 type Props = {
   tenant: string
@@ -12,6 +12,7 @@ type Props = {
 }
 
 export function Customers({ tenant, customers, agentName, onCall, onAdded }: Props) {
+  const { t, f } = useI18n()
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
   const [fresh, setFresh] = useState<string | null>(null)
@@ -26,7 +27,7 @@ export function Customers({ tenant, customers, agentName, onCall, onAdded }: Pro
       requestAnimationFrame(() =>
         document.getElementById(`card-${account_id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
     } catch (e) {
-      setError((e as Error).message)
+      setError(t.addFailed((e as Error).message))
     } finally {
       setAdding(false)
     }
@@ -35,11 +36,11 @@ export function Customers({ tenant, customers, agentName, onCall, onAdded }: Pro
   return (
     <section className="block" aria-labelledby="clientes">
       <header className="block-head">
-        <h2 id="clientes">Clientes</h2>
-        <p>Datos ficticios para probar. Para verificarte con {agentName}, di los últimos cuatro dígitos de la cédula y la fecha de nacimiento.</p>
+        <h2 id="clientes">{t.customersTitle}</h2>
+        <p>{t.customersIntro(agentName)}</p>
         <p className="add-customer">
           <button type="button" className="ghost" onClick={add} disabled={adding}>
-            <UserPlusIcon aria-hidden="true" /> {adding ? 'Creando…' : 'Agregar cliente al azar'}
+            <UserPlusIcon aria-hidden="true" /> {adding ? t.adding : t.addCustomer}
           </button>
           <span role="status" className="error">{error}</span>
         </p>
@@ -55,50 +56,48 @@ export function Customers({ tenant, customers, agentName, onCall, onAdded }: Pro
               <header>
                 <h3 id={`c-${c.account_id}`}>{c.full_name}</h3>
                 <p className={`status status-${c.status}`}>
-                  {c.opted_out ? 'No contactar' : ACCOUNT_STATUS[c.status]}
+                  {c.opted_out ? t.optedOut : t.accountStatus[c.status]}
                 </p>
               </header>
 
               <dl className="test-data">
                 <div>
-                  <dt>Cédula</dt>
+                  <dt>{t.nationalId}</dt>
                   <dd>
                     {c.national_id.slice(0, -4)}
                     <mark>{c.national_id.slice(-4)}</mark>
                   </dd>
                 </div>
                 <div>
-                  <dt>Nacimiento</dt>
-                  <dd><time dateTime={c.birth_date}>{longDate(c.birth_date)}</time></dd>
+                  <dt>{t.birthDate}</dt>
+                  <dd><time dateTime={c.birth_date}>{f.longDate(c.birth_date)}</time></dd>
                 </div>
               </dl>
-              <p className="say">
-                Di: «{spokenDigits(c.national_id.slice(-4))}» y «{longDate(c.birth_date)}».
-              </p>
+              <p className="say">{t.say(f.spokenDigits(c.national_id.slice(-4)), f.longDate(c.birth_date))}</p>
               {onCall && !c.opted_out && (
                 <button type="button" className="ghost call-as" onClick={() => onCall(c)}>
-                  <PhoneIcon aria-hidden="true" /> Llamar como {c.full_name.split(' ')[0]}
+                  <PhoneIcon aria-hidden="true" /> {t.callAs(c.full_name.split(' ')[0])}
                 </button>
               )}
 
               <dl className="debt">
                 <div>
-                  <dt>En mora</dt>
-                  <dd className="overdue">{money(c.overdue_amount)}</dd>
+                  <dt>{t.overdue}</dt>
+                  <dd className="overdue">{f.money(c.overdue_amount)}</dd>
                 </div>
                 <div>
-                  <dt>Días de mora</dt>
+                  <dt>{t.daysPastDue}</dt>
                   <dd>{c.days_past_due}</dd>
                 </div>
                 <div>
-                  <dt>Saldo total</dt>
-                  <dd>{money(c.total_balance)}</dd>
+                  <dt>{t.totalBalance}</dt>
+                  <dd>{f.money(c.total_balance)}</dd>
                 </div>
               </dl>
 
               <footer>
-                <p>{c.product}, cuenta terminada en {c.account_last4}</p>
-                <p>{c.calls === 1 ? '1 llamada' : `${c.calls} llamadas`}</p>
+                <p>{t.accountLine(c.product, c.account_last4)}</p>
+                <p>{t.calls(c.calls)}</p>
               </footer>
             </article>
           </li>

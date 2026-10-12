@@ -120,6 +120,9 @@ It refreshes every 10 seconds and switches between tenants.
   one tenant. The function can only add rows, caps each tenant at 40 accounts, keeps last 4 digits plus birth date
   unique per tenant, and copies the tenant's demo Telegram chat.
 - Switching tenant hangs up any live call and clears its transcript.
+- The header switches the interface between Spanish and English (`src/i18n.tsx`: both dictionaries share one type,
+  so a missing translation fails the build). The choice is saved in the browser; the first visit follows the
+  browser language. Only the interface changes: the agents still greet in Spanish and switch if the customer does.
 - "Llamada en vivo" calls the agent from the browser with `@elevenlabs/react` and [ElevenLabs UI](https://ui.elevenlabs.io)
   components (Orb, Conversation, Message, ShimmeringText, vendored in `src/components/ui/`). The agents send
   `agent_tool_request` / `agent_tool_response` client events so the transcript shows each tool step. Every call

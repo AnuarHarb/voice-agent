@@ -1,22 +1,10 @@
 import { useEffect, useState } from 'react'
 import { api, type AuditEvent, type Conversation } from '../api'
-import { OUTCOME, SENTIMENT, TOOL, clock, dateTime, duration, historyUrl, money, percent, shortDate, signed } from '../format'
-
-const RESULT: Record<string, string> = {
-  verified: 'verificada',
-  not_verified: 'no coincide',
-  locked: 'bloqueada por intentos',
-  ok: 'ok',
-  sent: 'enviado',
-  created: 'creado',
-  registered: 'registrado',
-  stored: 'guardado',
-  idempotent_replay: 'repetido, se devolvió el mismo',
-  channel_failed: 'falló el canal',
-  simulated_payment: 'pagado',
-}
+import { historyUrl } from '../format'
+import { useI18n } from '../i18n'
 
 function Events({ tenant, conversationId }: { tenant: string; conversationId: string }) {
+  const { t, f } = useI18n()
   const [events, setEvents] = useState<AuditEvent[] | null>(null)
   const [error, setError] = useState('')
 
@@ -29,9 +17,9 @@ function Events({ tenant, conversationId }: { tenant: string; conversationId: st
     return () => { live = false }
   }, [tenant, conversationId])
 
-  if (error) return <p className="error">No se pudo cargar la bitácora: {error}</p>
-  if (events === null) return <p className="muted">Cargando la bitácora…</p>
-  if (events.length === 0) return <p className="muted">El agente no llamó ninguna herramienta en esta conversación.</p>
+  if (error) return <p className="error">{t.eventsError(error)}</p>
+  if (events === null) return <p className="muted">{t.eventsLoading}</p>
+  if (events.length === 0) return <p className="muted">{t.eventsEmpty}</p>
 
   return (
     <ol className="events">
@@ -39,9 +27,9 @@ function Events({ tenant, conversationId }: { tenant: string; conversationId: st
         const detail = Object.entries(e.detail ?? {})
         return (
           <li key={i} className={e.result.startsWith('rejected') || e.result.includes('fail') || e.result === 'not_verified' ? 'is-warning' : ''}>
-            <time dateTime={e.created_at}>{clock(e.created_at)}</time>
+            <time dateTime={e.created_at}>{f.clock(e.created_at)}</time>
             <p>
-              <strong>{TOOL[e.tool] ?? e.tool}</strong>: {RESULT[e.result] ?? e.result}
+              <strong>{t.tool[e.tool] ?? e.tool}</strong>: {t.result[e.result] ?? e.result}
             </p>
             {detail.length > 0 && (
               <dl>
@@ -61,42 +49,48 @@ function Events({ tenant, conversationId }: { tenant: string; conversationId: st
 }
 
 function Row({ tenant, c }: { tenant: string; c: Conversation }) {
+  const { t, f } = useI18n()
   const [open, setOpen] = useState(false)
   return (
     <li>
       <details onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
         <summary>
-          <time dateTime={c.started_at}>{dateTime(c.started_at)}</time>
-          <span className="who">{c.full_name ?? 'Sin identificar'}</span>
+          <time dateTime={c.started_at}>{f.dateTime(c.started_at)}</time>
+          <span className="who">{c.full_name ?? t.unidentified}</span>
           <span className={`outcome outcome-${c.outcome ?? 'pendiente'}`}>
-            {c.outcome ? OUTCOME[c.outcome] ?? c.outcome : 'Sin resumen aún'}
+            {c.outcome ? t.outcome[c.outcome] ?? c.outcome : t.noSummary}
           </span>
-          <span className="muted">{duration(c.duration_secs)}</span>
+          <span className="muted">{f.duration(c.duration_secs)}</span>
         </summary>
         <div className="conversation-body">
           <dl className="facts">
-            {c.language && (<div><dt>Idioma</dt><dd>{c.language === 'en' ? 'Inglés' : 'Español'}</dd></div>)}
-            {c.late_reason && (<div><dt>Motivo de la mora</dt><dd>{c.late_reason}</dd></div>)}
-            {c.promise_amount != null && (<div><dt>Promesa</dt><dd>{money(c.promise_amount)}{c.promise_date ? `, desde el ${shortDate(c.promise_date)}` : ''}</dd></div>)}
-            {c.hardship != null && (<div><dt>Dificultad económica</dt><dd>{c.hardship ? 'Sí' : 'No'}</dd></div>)}
+            {c.language && (<div><dt>{t.language}</dt><dd>{t.languageName(c.language)}</dd></div>)}
+            {c.late_reason && (<div><dt>{t.lateReason}</dt><dd>{c.late_reason}</dd></div>)}
+            {c.promise_amount != null && (
+              <div>
+                <dt>{t.promise}</dt>
+                <dd>{f.money(c.promise_amount)}{c.promise_date ? t.promiseFrom(f.shortDate(c.promise_date)) : ''}</dd>
+              </div>
+            )}
+            {c.hardship != null && (<div><dt>{t.hardship}</dt><dd>{c.hardship ? t.yes : t.no}</dd></div>)}
             {c.sentiment_label && (
               <div>
-                <dt>Ánimo al final</dt>
+                <dt>{t.moodAtEnd}</dt>
                 <dd>
-                  <span className={`mood mood-${c.sentiment_label}`}>{SENTIMENT[c.sentiment_label]}</span>
-                  {c.frustration_score != null && `, frustración ${percent(c.frustration_score)}`}
+                  <span className={`mood mood-${c.sentiment_label}`}>{t.sentiment[c.sentiment_label]}</span>
+                  {c.frustration_score != null && t.frustration(f.percent(c.frustration_score))}
                   {c.min_sentiment_score != null && c.sentiment_score != null && c.min_sentiment_score < c.sentiment_score &&
-                    `; su punto más bajo fue ${signed(c.min_sentiment_score)} y cerró en ${signed(c.sentiment_score)}`}
+                    t.lowest(f.signed(c.min_sentiment_score), f.signed(c.sentiment_score))}
                 </dd>
               </div>
             )}
-            <div><dt>Herramientas llamadas</dt><dd>{c.tool_calls}</dd></div>
+            <div><dt>{t.toolCalls}</dt><dd>{c.tool_calls}</dd></div>
           </dl>
-          <h3>Lo que hizo el agente, paso a paso</h3>
+          <h3>{t.stepsTitle}</h3>
           {open && <Events tenant={tenant} conversationId={c.conversation_id} />}
           <p>
             <a href={historyUrl(c.conversation_id)} target="_blank" rel="noreferrer">
-              Escuchar la llamada en ElevenLabs
+              {t.listen}
             </a>
           </p>
         </div>
@@ -106,14 +100,15 @@ function Row({ tenant, c }: { tenant: string; c: Conversation }) {
 }
 
 export function Conversations({ tenant, conversations }: { tenant: string; conversations: Conversation[] }) {
+  const { t } = useI18n()
   return (
     <section className="block" aria-labelledby="conversaciones">
       <header className="block-head">
-        <h2 id="conversaciones">Conversaciones</h2>
-        <p>Abre una para ver, en orden, cada herramienta que usó el agente y qué le respondió el sistema.</p>
+        <h2 id="conversaciones">{t.conversationsTitle}</h2>
+        <p>{t.conversationsIntro}</p>
       </header>
       {conversations.length === 0 ? (
-        <p className="empty">Aún no hay llamadas. La primera aparecerá aquí sola, sin recargar.</p>
+        <p className="empty">{t.conversationsEmpty}</p>
       ) : (
         <ul className="conversations" role="list">
           {conversations.map((c) => <Row key={c.conversation_id} tenant={tenant} c={c} />)}

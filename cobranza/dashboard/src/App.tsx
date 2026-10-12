@@ -6,64 +6,46 @@ import { Customers } from './components/Customers'
 import { LiveCall } from './components/LiveCall'
 import { Plans } from './components/Plans'
 import { ShimmeringText } from '@/components/ui/shimmering-text'
-import { clock, money } from './format'
+import { summaryFacts, useI18n, type Lang } from './i18n'
 import { useLiveCall } from './live'
 
 const REFRESH_MS = 10_000
 const AGENT_NAME: Record<string, string> = { avanza: 'Sofía', nexo: 'Horacio' }
+const LANGUAGES: { id: Lang; name: string }[] = [{ id: 'es', name: 'Español' }, { id: 'en', name: 'English' }]
 
 const tenantFromUrl = () => new URLSearchParams(location.search).get('fintech') ?? 'avanza'
 
 function Summary({ data }: { data: Overview }) {
-  const overdue = data.customers.reduce((sum, c) => sum + c.overdue_amount, 0)
-  const recovered = data.plans.filter((p) => p.status !== 'cancelled').reduce((sum, p) => sum + p.total_amount, 0)
-  const paid = data.plans.filter((p) => p.status === 'paid').length
-  const n = data.customers.length
-  const scored = data.conversations.filter((c) => c.sentiment_label)
-  const calm = scored.filter((c) => c.sentiment_label !== 'negative').length
-  return (
-    <p className="lede">
-      {n} {n === 1 ? 'cliente debe' : 'clientes deben'} <strong>{money(overdue)}</strong> en mora.{' '}
-      {data.plans.length === 0 ? (
-        'Todavía no hay planes acordados por voz.'
-      ) : (
-        <>
-          Por voz se han comprometido <strong>{money(recovered)}</strong> en{' '}
-          {data.plans.length === 1 ? '1 plan' : `${data.plans.length} planes`}
-          {paid > 0 ? `, ${paid} ya ${paid === 1 ? 'pagado' : 'pagados'}` : ''}.
-        </>
-      )}
-      {scored.length > 0 && (
-        <>
-          {' '}
-          {scored.length === 1
-            ? `La llamada analizada terminó con el cliente ${calm ? 'tranquilo' : 'molesto'}.`
-            : `${calm === scored.length ? 'Todas las' : `${calm} de ${scored.length}`} llamadas analizadas terminaron sin el cliente molesto.`}
-        </>
-      )}
-    </p>
-  )
+  const { t, f } = useI18n()
+  return <p className="lede">{t.summary(summaryFacts(data, f.money))}</p>
 }
 
 function Policy({ data }: { data: Overview }) {
-  const p = data.policy
-  if (!p) return null
+  const { t, f } = useI18n()
+  if (!data.policy) return null
   return (
     <section className="block policy" aria-labelledby="politica">
-      <h2 id="politica">Política de crédito</h2>
-      <p>
-        Hasta {p.max_installments} {p.max_installments === 1 ? 'cuota' : 'cuotas'} de mínimo {money(p.min_installment_cop)},
-        con el primer pago en los próximos {p.first_payment_max_days} días.{' '}
-        {p.hardship_enabled
-          ? `A quien cuenta una dificultad económica se le puede ofrecer ${p.hardship_installments} cuotas, empezando en ${p.hardship_grace_days} días.`
-          : 'No hay opción especial por dificultad económica: esos casos pasan a un asesor.'}
-        {' '}Nunca hay descuentos.
-      </p>
+      <h2 id="politica">{t.policyTitle}</h2>
+      <p>{t.policy(data.policy, f.money)}</p>
     </section>
   )
 }
 
+function LanguageSwitch() {
+  const { lang, setLang, t } = useI18n()
+  return (
+    <div className="lang-switch" role="group" aria-label={t.languageGroup}>
+      {LANGUAGES.map((l) => (
+        <button key={l.id} type="button" lang={l.id} aria-pressed={l.id === lang} onClick={() => setLang(l.id)}>
+          {l.name}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function App() {
+  const { t, f } = useI18n()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [tenant, setTenant] = useState(tenantFromUrl)
   const [includeTests, setIncludeTests] = useState(false)
@@ -91,7 +73,7 @@ export default function App() {
   }, [load])
 
   const current = tenants.find((t) => t.id === tenant)
-  const agentName = AGENT_NAME[tenant] ?? 'el agente'
+  const agentName = AGENT_NAME[tenant] ?? t.agentFallback
   const shown = data?.tenant.id === tenant ? data : null
 
   const call = useLiveCall(current?.agent_id ?? undefined, () => {
@@ -106,8 +88,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (current) document.title = `Mesa de cobranza de ${current.name}`
-  }, [current])
+    if (current) document.title = t.docTitle(current.name)
+  }, [current, t])
 
   const switchTenant = (id: string) => {
     if (id === tenant) return
@@ -134,37 +116,40 @@ export default function App() {
       <header className="masthead">
         <div className="brand">
           <p>{current?.name ?? ' '}</p>
-          <h1>Mesa de cobranza</h1>
+          <h1>{t.appTitle}</h1>
         </div>
-        <nav aria-label="Fintech">
-          <ul role="list">
-            {tenants.map((t) => (
-              <li key={t.id}>
-                <a href={`?fintech=${t.id}`} onClick={choose(t.id)} aria-current={t.id === tenant ? 'page' : undefined}>
-                  {t.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="masthead-tools">
+          <nav aria-label={t.fintechNav}>
+            <ul role="list">
+              {tenants.map((item) => (
+                <li key={item.id}>
+                  <a href={`?fintech=${item.id}`} onClick={choose(item.id)} aria-current={item.id === tenant ? 'page' : undefined}>
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <LanguageSwitch />
+        </div>
       </header>
 
       <main>
-        <section className="intro" aria-label="Resumen">
+        <section className="intro" aria-label={t.summaryLabel}>
           {shown ? (
             <Summary data={shown} />
           ) : (
-            <p className="lede"><ShimmeringText text={`Cargando ${current?.name ?? 'la fintech'}…`} /></p>
+            <p className="lede"><ShimmeringText text={t.loading(current?.name)} /></p>
           )}
           <div className="controls">
             <label>
               <input type="checkbox" checked={includeTests} onChange={(e) => setIncludeTests(e.target.checked)} />
-              Incluir pruebas automáticas
+              {t.includeTests}
             </label>
             <p className="muted" aria-live="polite">
               {error
-                ? <span className="error">Sin conexión con el backend ({error}). Reintentando cada 10 segundos.</span>
-                : shown && <>Actualizado a las <time dateTime={shown.generated_at}>{clock(shown.generated_at)}</time>, se refresca solo</>}
+                ? <span className="error">{t.offline(error)}</span>
+                : shown && t.updatedAt(<time dateTime={shown.generated_at}>{f.clock(shown.generated_at)}</time>)}
             </p>
           </div>
         </section>
@@ -188,11 +173,7 @@ export default function App() {
       </main>
 
       <footer className="colophon">
-        <p>
-          Simulación del back office de la fintech. Cada consulta usa el rol de solo lectura <code>cobranza_console</code>,
-          y la seguridad por fila de Supabase limita los datos a la fintech elegida. Lo único que escribe es
-          «Agregar cliente al azar», a través de una función que solo puede crear clientes ficticios en esa fintech.
-        </p>
+        <p>{t.footer}</p>
       </footer>
     </div>
   )

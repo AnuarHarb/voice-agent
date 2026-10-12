@@ -11,6 +11,7 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
   const [caller, setCaller] = useState<Customer | null>(null)
   const [pendingTools, setPendingTools] = useState(0)
   const [error, setError] = useState('')
+  const [micDenied, setMicDenied] = useState(false)
   const mic = useRef<MediaStream | null>(null)
   const nextId = useRef(0)
   const live = useRef(false)
@@ -55,10 +56,11 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
       setCaller(as)
       setLines([])
       setError('')
+      setMicDenied(false)
       try {
         mic.current = await navigator.mediaDevices.getUserMedia({ audio: true })
       } catch {
-        setError('Sin acceso al micrófono. Permítelo en el navegador para llamar.')
+        setMicDenied(true)
         return
       }
       conversation.startSession({ agentId, connectionType: 'webrtc' })
@@ -79,6 +81,7 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
     lines,
     caller,
     error,
+    micDenied,
     isMuted,
     start,
     end: conversation.endSession,
@@ -88,6 +91,7 @@ export function useLiveCall(agentId: string | undefined, onEnded: () => void) {
       setLines([])
       setCaller(null)
       setError('')
+      setMicDenied(false)
       setPendingTools(0)
     },
     toggleMute: () => conversation.setMuted(!isMuted),

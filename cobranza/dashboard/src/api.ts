@@ -88,7 +88,7 @@ export type AuditEvent = { created_at: string; tool: string; result: string; det
 
 async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, { signal })
-  if (!response.ok) throw new Error(`${response.status} en ${path}`)
+  if (!response.ok) throw new Error(`HTTP ${response.status} ${path}`)
   return response.json() as Promise<T>
 }
 
@@ -98,7 +98,7 @@ export const api = {
     get<Overview>(`/console/${tenant}/overview?include_tests=${includeTests}`, signal),
   createCustomer: async (tenant: string) => {
     const response = await fetch(`${API_URL}/console/${tenant}/customers`, { method: 'POST' })
-    if (!response.ok) throw new Error(`${response.status} al crear el cliente`)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
     return (await response.json()) as { account_id: string }
   },
   events: (tenant: string, conversationId: string) =>

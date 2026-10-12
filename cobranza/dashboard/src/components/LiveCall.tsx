@@ -3,7 +3,7 @@ import { MicIcon, MicOffIcon, PhoneIcon, PhoneOffIcon } from 'lucide-react'
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ui/conversation'
 import { Message, MessageContent } from '@/components/ui/message'
 import { ShimmeringText } from '@/components/ui/shimmering-text'
-import { longDate, spokenDigits, TOOL } from '../format'
+import { useI18n } from '../i18n'
 import type { LiveCall as Call } from '../live'
 
 const Orb = lazy(() => import('@/components/ui/orb').then((m) => ({ default: m.Orb })))
@@ -14,25 +14,25 @@ const ORB_COLORS: Record<string, [string, string]> = {
 }
 
 function StatusLine({ call, agentName }: { call: Call; agentName: string }) {
+  const { t } = useI18n()
+  if (call.micDenied) return <p className="error">{t.micDenied}</p>
   if (call.error) return <p className="error">{call.error}</p>
-  if (call.status === 'connecting') return <ShimmeringText text={`Conectando con ${agentName}…`} />
-  if (call.status !== 'connected') return <p className="muted">Lista para llamar</p>
-  if (call.agentState === 'thinking') return <ShimmeringText text={`${agentName} está consultando…`} />
-  return <p>{call.agentState === 'talking' ? `${agentName} está hablando` : `${agentName} te escucha`}</p>
+  if (call.status === 'connecting') return <ShimmeringText text={t.connecting(agentName)} />
+  if (call.status !== 'connected') return <p className="muted">{t.ready}</p>
+  if (call.agentState === 'thinking') return <ShimmeringText text={t.thinking(agentName)} />
+  return <p>{call.agentState === 'talking' ? t.talking(agentName) : t.listening(agentName)}</p>
 }
 
 export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: string; agentName: string }) {
+  const { t, f } = useI18n()
   const live = call.status === 'connected' || call.status === 'connecting'
   const colors = ORB_COLORS[tenant] ?? ORB_COLORS.avanza
 
   return (
     <section className="block live" id="en-vivo" aria-labelledby="en-vivo-titulo">
       <header className="block-head">
-        <h2 id="en-vivo-titulo">Llamada en vivo</h2>
-        <p>
-          Habla con {agentName} desde aquí con tu micrófono. El plan o el caso aparece en las tablas apenas cuelgues.
-          Cada llamada consume créditos de ElevenLabs.
-        </p>
+        <h2 id="en-vivo-titulo">{t.liveTitle}</h2>
+        <p>{t.liveIntro(agentName)}</p>
       </header>
 
       <div className="live-grid">
@@ -55,16 +55,16 @@ export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: stri
           {call.caller && live && (
             <dl className="caller">
               <div>
-                <dt>Llamas como</dt>
+                <dt>{t.callingAs}</dt>
                 <dd>{call.caller.full_name}</dd>
               </div>
               <div>
-                <dt>Cédula</dt>
-                <dd>«{spokenDigits(call.caller.national_id.slice(-4))}»</dd>
+                <dt>{t.nationalId}</dt>
+                <dd>«{f.spokenDigits(call.caller.national_id.slice(-4))}»</dd>
               </div>
               <div>
-                <dt>Nacimiento</dt>
-                <dd>«{longDate(call.caller.birth_date)}»</dd>
+                <dt>{t.birthDate}</dt>
+                <dd>«{f.longDate(call.caller.birth_date)}»</dd>
               </div>
             </dl>
           )}
@@ -73,37 +73,33 @@ export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: stri
             {live ? (
               <>
                 <button type="button" className="call hang-up" onClick={call.end}>
-                  <PhoneOffIcon aria-hidden="true" /> Colgar
+                  <PhoneOffIcon aria-hidden="true" /> {t.hangUp}
                 </button>
                 <button type="button" className="ghost" onClick={call.toggleMute} aria-pressed={call.isMuted}>
                   {call.isMuted ? <MicOffIcon aria-hidden="true" /> : <MicIcon aria-hidden="true" />}
-                  {call.isMuted ? 'Activar micrófono' : 'Silenciar'}
+                  {call.isMuted ? t.unmute : t.mute}
                 </button>
               </>
             ) : (
               <button type="button" className="call" onClick={() => call.start()}>
-                <PhoneIcon aria-hidden="true" /> Llamar a {agentName}
+                <PhoneIcon aria-hidden="true" /> {t.callAgent(agentName)}
               </button>
             )}
           </div>
         </div>
 
-        <Conversation className="transcript" aria-label={`Transcripción con ${agentName}`}>
+        <Conversation className="transcript" aria-label={t.transcriptLabel(agentName)}>
           <ConversationContent className="transcript-content">
             {call.lines.length === 0 ? (
-              <p className="transcript-empty">
-                {live
-                  ? `Saluda a ${agentName}; lo que digan los dos aparece aquí.`
-                  : 'La transcripción aparece aquí durante la llamada. Para llamar como un cliente, usa el botón de su tarjeta.'}
-              </p>
+              <p className="transcript-empty">{live ? t.transcriptLive(agentName) : t.transcriptIdle}</p>
             ) : (
               call.lines.map((line) =>
                 line.kind === 'tool' ? (
                   <p key={line.id} className={`tool-step${line.ok === false ? ' is-error' : ''}`}>
                     {line.ok === null ? (
-                      <ShimmeringText text={`${TOOL[line.tool] ?? line.tool}…`} />
+                      <ShimmeringText text={`${t.tool[line.tool] ?? line.tool}…`} />
                     ) : (
-                      <>{line.ok ? '✓' : '✕'} {TOOL[line.tool] ?? line.tool}</>
+                      <>{line.ok ? '✓' : '✕'} {t.tool[line.tool] ?? line.tool}</>
                     )}
                   </p>
                 ) : (
@@ -116,7 +112,7 @@ export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: stri
               )
             )}
           </ConversationContent>
-          <ConversationScrollButton aria-label="Ir al último mensaje" />
+          <ConversationScrollButton aria-label={t.scrollLatest} />
         </Conversation>
       </div>
     </section>

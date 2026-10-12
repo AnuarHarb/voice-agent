@@ -56,6 +56,16 @@ code { font-size: 0.92em; }
 .masthead a:hover { color: var(--ink); }
 .masthead a[aria-current='page'] { background: var(--accent); color: #fff; }
 
+.masthead-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.lang-switch { display: flex; gap: 0.125rem; padding: 0.2rem; border: 1px solid var(--rule); border-radius: 999px; }
+.lang-switch button {
+  padding: 0.3rem 0.75rem; border: 0; border-radius: 999px; background: none; cursor: pointer;
+  color: var(--muted); font: inherit; font-weight: 600; font-size: var(--step--1);
+}
+.lang-switch button:hover { color: var(--ink); }
+.lang-switch button[aria-pressed='true'] { background: var(--ink); color: var(--surface); }
+.lang-switch button:focus-visible, .masthead a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* intro: a sentence instead of KPI tiles */
 .intro {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem 3rem; align-items: start;
