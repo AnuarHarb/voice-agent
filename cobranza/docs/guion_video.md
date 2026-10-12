@@ -427,7 +427,13 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
   - En Horacio, el paso de herramienta dentro del procedure de verificación nunca llamó a `verify_identity`. El procedure lo tomó como falla, reintentó y terminó en "falla técnica" con un asesor.
   - En Sofía, con las respuestas encadenadas, dijo "para mañana, sábado diecisiete de octubre". "Mañana" era inventado, y el guardrail de montos y fechas cortó la llamada. El guardrail hizo su trabajo.
 - **Arreglo:** volver a `immediate`, que es lo que funcionaba. Además, el prompt principal ahora prohíbe fechas relativas ("hoy", "mañana"), porque el agente no sabe qué día es. La regla de no contar las opciones pasó del procedure al prompt principal, porque solo en el procedure no se cumplía.
-- **Lección:** las pruebas evalúan texto, no tiempos, así que no habrían visto este problema. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
+- **Lección:** las pruebas evalúan texto, no tiempos, así que no habrían visto este problema.
+
+**31. Se coló en voz una nota del modelo.**
+- **Síntoma:** en una llamada larga y difícil (pidió descuento, cambió de idioma, contó que estaba enfermo e interrumpió varias veces), Sofía dijo en voz alta *"Okay, let me see. The user is asking if they can pay everything in one go…"* y después respondió bien.
+- **Causa:** no fue el modelo de respaldo. El historial muestra que lo generó Haiku, sin modo de razonamiento, justo después de que la clienta la interrumpiera a mitad de la confirmación. La respuesta cortada quedó en el contexto y Haiku escribió primero una nota sobre la conversación, que se convirtió en voz como todo lo que escribe.
+- **Arreglo:** una regla explícita en el prompt: todo lo que escribe se dice en voz alta, así que solo escribe lo que le dice al cliente, nunca notas ni análisis, tampoco después de una interrupción.
+- **Lo bueno de esa misma llamada:** rechazó dos veces el descuento, siguió en inglés, ofreció el plan de dificultad solo cuando la clienta dijo que estaba enferma, ofreció un asesor y colgó con `end_call`. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
 
 ---
 
