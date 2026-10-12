@@ -6,6 +6,7 @@
   "pre_tool_speech": "force",
   "tool_call_sound": "typing",
   "tool_call_sound_behavior": "always",
+  "execution_mode": "post_tool_speech",
   "tool_error_handling_mode": "hide",
   "assignments": [
     { "source": "response", "dynamic_variable": "plan_ref", "value_path": "plan_ref" }

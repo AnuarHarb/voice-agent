@@ -6,6 +6,7 @@
   "pre_tool_speech": "auto",
   "tool_call_sound": "typing",
   "tool_call_sound_behavior": "always",
+  "execution_mode": "post_tool_speech",
   "tool_error_handling_mode": "hide",
   "api_schema": {
     "url": "${backend_url}/tools/payment-options",

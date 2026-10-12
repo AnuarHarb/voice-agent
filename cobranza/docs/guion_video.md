@@ -416,6 +416,12 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
 - **Arreglo:** al elegir otra fintech (también con atrás y adelante del navegador), el panel cuelga si hay una llamada, limpia la transcripción y descarta cualquier mensaje tardío de la llamada anterior.
 - **Por qué importa:** en multi-tenant, mostrar en la pantalla de Nexo lo que dijo un cliente de Avanza es exactamente el tipo de fuga que el resto del diseño evita.
 
+**30. El sonido de "tecleo" estaba configurado, pero no se oía.**
+- **Síntoma:** la agente decía "voy a revisar tu crédito" y en menos de medio segundo ya estaba dando el resultado.
+- **Causa:** las herramientas corrían en modo `immediate`, en paralelo con la frase puente. El backend responde antes de que termine la frase, y el sonido de tecleo solo suena mientras la herramienta corre, así que no le quedaba tiempo.
+- **Arreglo:** `execution_mode: "post_tool_speech"` en las 8 herramientas. La herramienta espera a que la agente termine la frase y el tecleo llena el tiempo de la consulta y de la respuesta.
+- **Por qué no una demora artificial en el backend:** el modo de ejecución resuelve el problema donde nace, en el orden de los eventos, sin hacer más lento el sistema para nadie.
+
 ---
 
 ## 7. Estado actual
