@@ -162,7 +162,13 @@ export default function App() {
         {shown && (
           <>
             {current?.agent_id && <LiveCall call={call} tenant={tenant} agentName={agentName} />}
-            <Customers customers={shown.customers} agentName={agentName} onCall={inCall ? undefined : callAs} />
+            <Customers
+              tenant={tenant}
+              customers={shown.customers}
+              agentName={agentName}
+              onCall={inCall ? undefined : callAs}
+              onAdded={load}
+            />
             <Plans plans={shown.plans} />
             <Conversations tenant={tenant} conversations={shown.conversations} />
             <Cases cases={shown.cases} />
@@ -173,8 +179,9 @@ export default function App() {
 
       <footer className="colophon">
         <p>
-          Simulación del back office de la fintech. Solo lectura: cada consulta usa el rol <code>cobranza_console</code>,
-          y la seguridad por fila de Supabase limita los datos a la fintech elegida.
+          Simulación del back office de la fintech. Cada consulta usa el rol de solo lectura <code>cobranza_console</code>,
+          y la seguridad por fila de Supabase limita los datos a la fintech elegida. Lo único que escribe es
+          «Agregar cliente al azar», a través de una función que solo puede crear clientes ficticios en esa fintech.
         </p>
       </footer>
     </div>

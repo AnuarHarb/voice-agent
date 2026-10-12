@@ -30,7 +30,7 @@ app = FastAPI(
 )
 app.add_exception_handler(ToolError, tool_error_handler)
 # Only the read-only console is meant to be called from a browser.
-app.add_middleware(CORSMiddleware, allow_methods=["GET"], allow_headers=[],
+app.add_middleware(CORSMiddleware, allow_methods=["GET", "POST"], allow_headers=[],
                    allow_origins=[o.strip() for o in get_settings().console_allowed_origins.split(",") if o.strip()])
 
 

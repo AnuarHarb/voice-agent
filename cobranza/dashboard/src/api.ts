@@ -96,6 +96,11 @@ export const api = {
   tenants: (signal?: AbortSignal) => get<Tenant[]>('/console/tenants', signal),
   overview: (tenant: string, includeTests: boolean, signal?: AbortSignal) =>
     get<Overview>(`/console/${tenant}/overview?include_tests=${includeTests}`, signal),
+  createCustomer: async (tenant: string) => {
+    const response = await fetch(`${API_URL}/console/${tenant}/customers`, { method: 'POST' })
+    if (!response.ok) throw new Error(`${response.status} al crear el cliente`)
+    return (await response.json()) as { account_id: string }
+  },
   events: (tenant: string, conversationId: string) =>
     get<AuditEvent[]>(`/console/${tenant}/conversations/${encodeURIComponent(conversationId)}/events`),
 }

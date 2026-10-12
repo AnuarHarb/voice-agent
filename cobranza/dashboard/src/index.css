@@ -109,6 +109,14 @@ code { font-size: 0.92em; }
 }
 .say { font-size: var(--step--1); color: var(--muted); }
 .call-as { justify-self: start; padding: 0.45rem 0.9rem; font-size: var(--step--1); }
+.add-customer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+.add-customer button { padding: 0.5rem 1rem; }
+.add-customer button:disabled { opacity: 0.6; cursor: progress; }
+.customer.fresh { animation: fresh 2.4s ease-out; }
+@keyframes fresh {
+  from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); }
+}
+@media (prefers-reduced-motion: reduce) { .customer.fresh { animation: none; outline: 2px solid var(--accent); } }
 
 /* live call: the orb is the agent, the log beside it is what both sides said */
 .live-grid {

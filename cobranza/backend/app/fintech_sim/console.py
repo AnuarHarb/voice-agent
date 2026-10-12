@@ -1,14 +1,17 @@
-"""Read-only back office of the simulated fintech: customers, debts, plans and calls.
-It connects as cobranza_console, so row level security still scopes every query to one tenant."""
+"""Back office of the simulated fintech: customers, debts, plans and calls.
+Reads connect as cobranza_console, so row level security still scopes every query to one tenant.
+The only write, adding a fictitious customer, goes through a gateway function as cobranza_app."""
 
 import json
-from datetime import datetime, timezone
+import random
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
+import asyncpg
 from fastapi import APIRouter, HTTPException, Query
 
 from app.config import get_settings
-from app.db import console_tx
+from app.db import console_tx, tenant_tx
 
 router = APIRouter(prefix="/console", tags=["fintech console"])
 
@@ -137,6 +140,42 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
         "cases": cases,
         "generated_at": datetime.now(timezone.utc),
     }
+
+
+_FIRST = ["Juliana", "Andrea", "Camila", "Valentina", "Diana", "Natalia", "Paola", "Luisa",
+          "Santiago", "Felipe", "Julián", "Mateo", "Jorge", "Ricardo", "Daniel", "Óscar"]
+_LAST = ["Rodríguez", "Martínez", "García", "López", "Hernández", "Moreno", "Castro", "Rojas",
+         "Vargas", "Jiménez", "Muñoz", "Ortiz", "Cárdenas", "Quintero", "Arango", "Salazar"]
+_PRODUCTS = {"avanza": ["Crédito de consumo", "Crédito de libranza"],
+             "nexo": ["Tarjeta de crédito", "Crédito de libre inversión"]}
+
+
+@router.post("/{tenant_id}/customers", status_code=201)
+async def create_customer(tenant_id: str) -> dict:
+    """Adds a random fictitious customer with an overdue account, for trying more calls."""
+    rng = random.SystemRandom()
+    async with console_tx() as conn:
+        if not await conn.fetchval("select 1 from cobranza.tenants where id = $1", tenant_id):
+            raise HTTPException(404, "unknown tenant")
+    for _ in range(5):
+        overdue = rng.randrange(300_000, 3_000_001, 50_000)
+        try:
+            async with tenant_tx(tenant_id) as conn:
+                account_id = await conn.fetchval(
+                    "select cobranza.create_demo_customer($1, $2, $3, $4, $5, $6, $7)",
+                    f"{rng.choice(_FIRST)} {' '.join(rng.sample(_LAST, 2))}",
+                    str(rng.randrange(10_000_000, 1_100_000_000)),
+                    date(1960, 1, 1) + timedelta(days=rng.randrange(365 * 43)),
+                    rng.choice(_PRODUCTS.get(tenant_id, ["Crédito de consumo"])),
+                    overdue,
+                    overdue * rng.randint(2, 5) // 100_000 * 100_000,
+                    rng.randint(5, 75))
+        except asyncpg.UniqueViolationError:
+            continue
+        except asyncpg.RaiseError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return {"account_id": account_id}
+    raise HTTPException(409, "could not find a free identity, try again")
 
 
 @router.get("/{tenant_id}/conversations/{conversation_id}/events")
