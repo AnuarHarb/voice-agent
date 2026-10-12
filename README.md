@@ -1,178 +1,177 @@
-# Agente de cobranza responsable · Avanza Crédito y Nexo Finanzas
+# Responsible collections agent · Avanza Crédito and Nexo Finanzas
 
-Un agente de voz en ElevenLabs que atiende a clientes en mora temprana de una fintech colombiana: verifica su identidad, le ofrece **solo** los planes que permite la política de crédito, registra el acuerdo y le manda el link de pago por Telegram, dentro de la Ley 2300 ("Dejen de fregar").
+An ElevenLabs voice agent that handles early-stage collections for a Colombian fintech. It verifies the caller's identity, offers **only** the plans the credit policy allows, registers the agreement and sends the payment link over Telegram, within Ley 2300 ("Dejen de fregar", Colombia's collections-harassment law).
 
-> El modelo conversa; el código decide todo lo que tiene consecuencias: identidad, dinero y cumplimiento.
+> The model talks; the code decides anything with consequences: identity, money and compliance.
 
 | | |
 | --- | --- |
-| Hablar con el agente (Avanza) | https://elevenlabs.io/app/talk-to?agent_id=agent_1101m4rhgsg7ezv9abbe1ztkgnf6 |
-| Consola de la fintech | https://dashboard-production-ea78.up.railway.app |
-| Backend (integración) | https://voice-agent-production-64b9.up.railway.app/health |
-| Conversation ID de ejemplo | `conv_0701m4rpy0bpf5p8169kkpce77qk` |
+| Talk to the agent (Avanza) | https://elevenlabs.io/app/talk-to?agent_id=agent_1101m4rhgsg7ezv9abbe1ztkgnf6 |
+| Fintech console | https://dashboard-production-ea78.up.railway.app |
+| Backend (integration) | https://voice-agent-production-64b9.up.railway.app/health |
+| Example Conversation ID | `conv_0701m4rpy0bpf5p8169kkpce77qk` |
 
-Este documento explica **cómo está dividido el sistema y por qué**. Para instalar, desplegar y operar, ver [`cobranza/README.md`](cobranza/README.md). Para el proceso, los errores y el guion del video, ver [`cobranza/docs/guion_video.md`](cobranza/docs/guion_video.md).
+This document explains **how the system is split and why**. For setup, deployment and operations, see [`cobranza/README.md`](cobranza/README.md). The agent speaks Colombian Spanish, and so does the console, because it plays the fintech's own back office.
 
 ---
 
-## Tres piezas: el cliente, la integración y el agente
+## Three pieces: the client, the integration and the agent
 
-En un despliegue real con una fintech, cada pieza tiene un dueño distinto. El repo construye las tres, pero las mantiene separadas como si ya existieran por su cuenta.
+In a real deployment with a fintech, each piece has a different owner. This repo builds all three, but keeps them apart as if they already existed on their own.
 
 ```mermaid
 flowchart LR
-    P[Persona en mora<br/>teléfono o web] <--> A
-    subgraph A[El agente · ElevenLabs]
-      A1[voz, LLM, procedures,<br/>guardrails, pruebas]
+    P[Person behind on payments<br/>phone or web] <--> A
+    subgraph A[The agent · ElevenLabs]
+      A1[voice, LLM, procedures,<br/>guardrails, tests]
     end
-    subgraph I[La integración · FastAPI en Railway]
-      I1[herramientas, sesiones,<br/>enmascaramiento, Ley 2300,<br/>canales, auditoría]
+    subgraph I[The integration · FastAPI on Railway]
+      I1[tools, sessions,<br/>masking, Ley 2300,<br/>channels, audit]
     end
-    subgraph C[El cliente · la fintech]
-      C1[(créditos, personas,<br/>política de crédito)]
-      C2[consola de cobranza]
+    subgraph C[The client · the fintech]
+      C1[(loans, people,<br/>credit policy)]
+      C2[collections console]
     end
-    A -- webhooks con llave del tenant --> I
-    A -- fin de llamada, firma HMAC --> I
-    I -- rol sin bypass de RLS --> C1
+    A -- webhooks with the tenant key --> I
+    A -- post-call, HMAC signed --> I
+    I -- role that cannot bypass RLS --> C1
     I --> T[Telegram]
     C2 --> C1
 ```
 
-**Una aclaración de vocabulario.** "Cliente" aquí es **la fintech**: el cliente de ElevenLabs, quien paga. A la persona que debe se le llama "titular" o "persona en mora", aunque en la consola aparezca como "cliente" porque así le dice la fintech.
+**A note on vocabulary.** "Client" here means **the fintech**: ElevenLabs' customer, the one who pays. The person who owes money is the "account holder", even though the console calls them "clientes", because that's what the fintech calls them.
 
-### 1. El cliente: los sistemas de la fintech
+### 1. The client: the fintech's own systems
 
-**Qué es.** Lo que Avanza Crédito ya tiene antes de que llegue cualquier agente: su core de créditos, su base de personas, su política de crédito y su equipo de cobranza.
+**What it is.** What Avanza Crédito already has before any agent shows up: its core lending system, its customer records, its credit policy and its collections team.
 
-**En un despliegue real:** ya existe. No se reconstruye; se consume a través de sus APIs.
+**In a real deployment:** it already exists. It isn't rebuilt; it's consumed through its APIs.
 
-**En este repo:** se simula, con datos ficticios, para que haya algo real contra qué integrar.
+**In this repo:** it's simulated with fictitious data, so there is something real to integrate against.
 
-| Pieza | Dónde | Qué simula |
+| Piece | Where | What it stands in for |
 | --- | --- | --- |
-| Créditos y personas | Supabase, tablas `accounts` y `pii_vault` | El core bancario. La cédula completa y la fecha de nacimiento viven en una bóveda separada |
-| Política de crédito | Tabla `tenant_policies` y `backend/app/fintech_sim/policy.py` | Cuántas cuotas, cuota mínima, plazo del primer pago y plan por dificultad. **Es la fintech la que calcula las opciones**, no el agente |
-| Calendario | `backend/app/fintech_sim/holidays.py` | Festivos de Colombia (ley Emiliani) |
-| Consola de cobranza | `cobranza/dashboard/` y `backend/app/fintech_sim/console.py` | El back office: clientes, planes acordados por voz, cada conversación paso a paso, casos para el equipo y el botón para crear clientes ficticios al azar |
-| Pasarela de pago | `GET/POST /pay/{token}` | El checkout donde la persona paga el link |
+| Loans and people | Supabase, tables `accounts` and `pii_vault` | The core banking system. Full national IDs and birth dates live in a separate vault |
+| Credit policy | Table `tenant_policies` and `backend/app/fintech_sim/policy.py` | Number of installments, minimum installment, first-payment deadline and the hardship plan. **The fintech computes the options**, not the agent |
+| Calendar | `backend/app/fintech_sim/holidays.py` | Colombian public holidays (including the ones moved to Monday by the Ley Emiliani) |
+| Collections console | `cobranza/dashboard/` and `backend/app/fintech_sim/console.py` | The back office: customers, plans agreed by voice, every conversation step by step, cases for the team, and a button that creates random fictitious customers |
+| Payment gateway | `GET/POST /pay/{token}` | The checkout page where the person pays the link |
 
-Hay **dos fintechs** (Avanza Crédito y Nexo Finanzas) con políticas distintas para demostrar que el diseño es multi-cliente de verdad.
+There are **two fintechs** (Avanza Crédito and Nexo Finanzas) with different policies, to show the design is truly multi-tenant.
 
-### 2. La integración: el trabajo del FDE
+### 2. The integration: the deployment engineer's job
 
-**Qué es.** La capa que traduce entre una conversación y los sistemas del cliente. Expone a la conversación contratos pequeños y seguros, y decide todo lo que tiene consecuencias.
+**What it is.** The layer that translates between a conversation and the client's systems. It gives the conversation small, safe contracts, and it decides anything with consequences.
 
-**En un despliegue real:** se construye. Es el trabajo de quien despliega (FDE o DS) sobre las APIs de la fintech.
+**In a real deployment:** it gets built. It's the work of whoever deploys the agent (an FDE or a Deployment Strategist), on top of the fintech's APIs.
 
-**En este repo:** `cobranza/backend/app/integration/`, un FastAPI en Railway.
+**In this repo:** `cobranza/backend/app/integration/`, a FastAPI service on Railway.
 
-| Responsabilidad | Cómo |
+| Responsibility | How |
 | --- | --- |
-| Saber qué fintech llama | Cada agente manda `X-Tenant-Key`, una llave que vive como secreto del workspace de ElevenLabs. El backend solo guarda su hash |
-| Verificar identidad | `verify_identity` coteja los últimos 4 de la cédula y la fecha de nacimiento, y devuelve un token de sesión. Tres intentos fallidos bloquean la conversación |
-| No dejar que el modelo vea lo que no debe | El token viaja en una variable dinámica secreta que el LLM nunca lee. Las cuentas salen enmascaradas ("terminada en 4417") y los montos en texto para voz |
-| Que el dinero salga de la política | `create_payment_plan` solo acepta un `plan_id` que se le ofreció a esa misma sesión. Es idempotente: confirmar dos veces no crea dos planes |
-| Cumplir la Ley 2300 | `GET /compliance/contact-window` dice si una llamada **saliente** está permitida ahora: horario legal, domingos y festivos, un contacto al día, un canal por semana, opt-out y disputas |
-| Enviar el link | Un adaptador de canal: Telegram hoy; WhatsApp ya está escrito y espera la plantilla aprobada por Meta |
-| Dejar evidencia | Cada llamada a una herramienta, aceptada o rechazada, queda en `audit_log`. El webhook de fin de llamada guarda el resultado, la promesa y el sentimiento |
+| Knowing which fintech is calling | Each agent sends `X-Tenant-Key`, a key stored as an ElevenLabs workspace secret. The backend only stores its hash |
+| Verifying identity | `verify_identity` matches the last 4 digits of the national ID and the birth date, and returns a session token. Three failed attempts lock the conversation |
+| Keeping things away from the model | The token travels in a secret dynamic variable the LLM never reads. Accounts come back masked ("terminada en 4417") and amounts as text ready to be spoken |
+| Making money come from the policy | `create_payment_plan` only accepts a `plan_id` that was offered to that same session. It's idempotent: confirming twice doesn't create two plans |
+| Complying with Ley 2300 | `GET /compliance/contact-window` says whether an **outbound** contact is allowed right now: legal hours, Sundays and holidays, one contact per day, one channel per week, opt-outs and open disputes |
+| Sending the link | A channel adapter: Telegram today. WhatsApp is already written and waits for a Meta-approved template |
+| Leaving evidence | Every tool call, accepted or rejected, is written to `audit_log`. The post-call webhook stores the outcome, the promise to pay and the sentiment |
 
-**Las 8 herramientas que ve el agente:** `verify_identity`, `get_account_summary`, `get_payment_options`, `create_payment_plan`, `send_payment_link`, `register_dispute`, `register_opt_out` y `request_callback`. Son las únicas puertas hacia el cliente.
+**The 8 tools the agent sees:** `verify_identity`, `get_account_summary`, `get_payment_options`, `create_payment_plan`, `send_payment_link`, `register_dispute`, `register_opt_out` and `request_callback`. They are the only doors into the client's systems.
 
-**El aislamiento entre fintechs no depende del código.** El backend se conecta a Postgres con `cobranza_app`, un rol sin `BYPASSRLS`. Cada transacción fija `app.tenant_id` y la seguridad por fila filtra todo. Aunque un query tuviera un bug, Postgres no devolvería filas de otra fintech.
+**Isolation between fintechs doesn't rely on the code being right.** The backend connects to Postgres as `cobranza_app`, a role without `BYPASSRLS`. Each transaction sets `app.tenant_id`, and row-level security filters everything. Even a buggy query could not return another fintech's rows.
 
-### 3. El agente: el producto
+### 3. The agent: the product
 
-**Qué es.** La conversación: voz, modelo, procedimientos, guardrails, base de conocimiento y pruebas, en ElevenLabs Agents.
+**What it is.** The conversation: voice, model, procedures, guardrails, knowledge base and tests, on ElevenLabs Agents.
 
-**En un despliegue real:** se construye. Es lo que la fintech compra.
+**In a real deployment:** it gets built. It's what the fintech is buying.
 
-**En este repo:** el agente es código. Una plantilla y un archivo por fintech generan los dos agentes (Sofía para Avanza, Horacio para Nexo).
+**In this repo:** the agent is code. One template plus one file per fintech generate both agents (Sofía for Avanza, Horacio for Nexo).
 
-| Pieza | Dónde |
+| Piece | Where |
 | --- | --- |
-| Configuración completa con huecos `${...}` | `cobranza/agent_configs/_template.json` |
-| Lo que cambia por fintech: nombre, voz, canal, llave | `cobranza/agent_configs/avanza.json`, `nexo.json` |
+| Full configuration with `${...}` placeholders | `cobranza/agent_configs/_template.json` |
+| What changes per fintech: name, voice, channel, key | `cobranza/agent_configs/avanza.json`, `nexo.json` |
 | System prompt | `cobranza/prompts/system_prompt.md` |
-| Una herramienta por archivo | `cobranza/tool_configs/` |
-| Procedimientos: estructurados donde un error cuesta, libres donde hay que escuchar | `cobranza/procedure_configs/` |
-| FAQ, Ley 2300 y aviso de datos | `cobranza/knowledge_base/` |
-| 11 pruebas por agente | `cobranza/test_configs/` |
-| Construir, validar contra el OpenAPI de ElevenLabs y publicar | `cobranza/scripts/agents.py` |
+| One tool per file | `cobranza/tool_configs/` |
+| Procedures: structured where a mistake costs money or privacy, free-form where the agent has to listen | `cobranza/procedure_configs/` |
+| FAQ, Ley 2300 and the data-processing notice | `cobranza/knowledge_base/` |
+| 11 tests per agent | `cobranza/test_configs/` |
+| Build, validate against the ElevenLabs OpenAPI, and publish | `cobranza/scripts/agents.py` |
 
-**Lo que el agente decide:** cómo hablar, a qué procedimiento entrar, cuándo escalar y cuándo colgar.
+**What the agent decides:** how to speak, which procedure to enter, when to escalate and when to hang up.
 
-**Lo que no decide:** quién es la persona, cuánto debe, qué plan existe o si se puede llamar ahora. Para eso llama a la integración, y si se equivoca, la integración lo rechaza.
+**What it doesn't decide:** who the person is, how much they owe, which plans exist, or whether it may call right now. For that it calls the integration, and if it gets something wrong, the integration rejects it.
 
 ---
 
-## Quién decide qué
+## Who decides what
 
-| Decisión | Agente | Integración | Cliente |
+| Decision | Agent | Integration | Client |
 | --- | :---: | :---: | :---: |
-| Cómo saludar, escuchar y explicar | ✔ | | |
-| Cambiar a inglés sin repetir la verificación | ✔ | | |
-| Si la persona es el titular | | ✔ | |
-| Qué datos de la cuenta se pueden decir | | ✔ | |
-| Qué planes existen y por cuánto | | | ✔ |
-| Si un plan elegido es válido | | ✔ | |
-| Si una llamada saliente cumple la Ley 2300 | | ✔ | |
-| Por dónde sale el link de pago | | ✔ | ✔ (elige el canal) |
-| Quién revisa disputas, asesorías y opt-outs | | | ✔ |
+| How to greet, listen and explain | ✔ | | |
+| Switching to English without verifying again | ✔ | | |
+| Whether the person is the account holder | | ✔ | |
+| Which account details may be said aloud | | ✔ | |
+| Which plans exist and for how much | | | ✔ |
+| Whether the chosen plan is valid | | ✔ | |
+| Whether an outbound contact complies with Ley 2300 | | ✔ | |
+| Which channel the payment link goes through | | ✔ | ✔ (picks the channel) |
+| Who handles disputes, callbacks and opt-outs | | | ✔ |
 
 ---
 
-## Una llamada, de punta a punta
+## One call, end to end
 
 ```mermaid
 sequenceDiagram
-    participant P as Persona
-    participant A as Agente
-    participant I as Integración
-    participant C as Cliente (fintech)
-    P->>A: "Quiero ponerme al día"
+    participant P as Person
+    participant A as Agent
+    participant I as Integration
+    participant C as Client (fintech)
+    P->>A: "I want to get up to date"
     A->>I: verify_identity(4417, 1990-05-14)
-    I->>C: cotejo en la bóveda (rol con RLS)
-    I-->>A: verificado + token secreto
+    I->>C: match against the vault (RLS-bound role)
+    I-->>A: verified + secret token
     A->>I: get_account_summary
-    I-->>A: "terminada en 4417, $1.200.000, 21 días"
+    I-->>A: "ending in 4417, $1.200.000, 21 days"
     A->>I: get_payment_options
-    I->>C: calcula opciones con la política
-    I-->>A: opciones con plan_id
-    P->>A: "Tres cuotas, confirmo"
+    I->>C: compute options from the policy
+    I-->>A: options with plan_id
+    P->>A: "Three installments, I confirm"
     A->>I: create_payment_plan(plan_id)
-    I->>C: registra el plan (solo si se ofreció)
+    I->>C: register the plan (only if it was offered)
     A->>I: send_payment_link
-    I->>P: link por Telegram
-    A-->>I: fin de llamada: resultado, promesa, sentimiento
-    Note over C: La consola muestra el plan, la conversación y el ánimo
+    I->>P: link over Telegram
+    A-->>I: post-call: outcome, promise, sentiment
+    Note over C: The console shows the plan, the conversation and the mood
 ```
 
 ---
 
-## Qué cambia en un despliegue real
+## What changes in a real deployment
 
-| Hoy en el repo | Con una fintech real |
+| In this repo | With a real fintech |
 | --- | --- |
-| Supabase con datos ficticios hace de core bancario | Las APIs de la fintech; la integración cambia de "consulta SQL" a "llamada HTTP" sin tocar al agente |
-| La consola lee directo de la base con un rol de solo lectura | Su CRM o su herramienta de cobranza, alimentados por el webhook de fin de llamada |
-| La persona llama desde la web | Telefonía real (SIP o Twilio) y campañas salientes que consultan primero `contact-window` |
-| Telegram | WhatsApp con plantilla de utilidad aprobada por Meta, cambiando un valor por fintech |
-| Aislamiento por fila en una base compartida | Según el banco: un esquema, una base o cómputo dedicado por fintech |
+| Supabase with fictitious data plays the core banking system | The fintech's APIs. The integration goes from "SQL query" to "HTTP call" without touching the agent |
+| The console reads straight from the database with a read-only role | Their CRM or collections tool, fed by the post-call webhook |
+| The person calls from the web | Real telephony (SIP or Twilio), and outbound campaigns that check `contact-window` first |
+| Telegram | WhatsApp with a Meta-approved utility template, by changing one value per fintech |
+| Row-level isolation in a shared database | Depending on the bank: a schema, a database, or dedicated compute per fintech |
 
 ---
 
-## Mapa del repo
+## Repo map
 
 ```
-specs                      el spec original del take-home
+specs                      the original take-home spec
 cobranza/
-  README.md                instalación, despliegue y operación
-  docs/guion_video.md      proceso, errores resueltos y guion del video
+  README.md                setup, deployment and operations
   agent_configs/  prompts/  tool_configs/  procedure_configs/  knowledge_base/  test_configs/
-  scripts/agents.py        build / push / test / chat del agente          ← el agente
-  backend/app/integration/ herramientas, auth, sesiones, Ley 2300, canales ← la integración
-  backend/app/fintech_sim/ política, festivos, consola                    ← el cliente (simulado)
-  supabase/migrations/     esquema, RLS, roles y datos semilla            ← el cliente (simulado)
-  dashboard/               consola de cobranza en React                   ← el cliente (simulado)
+  scripts/agents.py        build / push / test / chat for the agent       ← the agent
+  backend/app/integration/ tools, auth, sessions, Ley 2300, channels      ← the integration
+  backend/app/fintech_sim/ policy, holidays, console                      ← the client (simulated)
+  supabase/migrations/     schema, RLS, roles and seed data               ← the client (simulated)
+  dashboard/               collections console in React                   ← the client (simulated)
 ```
