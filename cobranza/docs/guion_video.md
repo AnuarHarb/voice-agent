@@ -427,7 +427,7 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
 | Webhook de fin de llamada | Funciona | Railway respondió 200 con firma HMAC válida |
 | Agentes publicados | Sí | Avanza: `agent_1101m4rhgsg7ezv9abbe1ztkgnf6`; Nexo: `agent_0901m4rhh9q7es19m1h50f729s3p` |
 | Pruebas del backend | 29/29 | pytest |
-| Batería del agente | **Corrida final de Avanza: 11/11**, con todos los cambios publicados (antes: 21/22 en los dos agentes) | Corridas en ElevenLabs |
+| Batería del agente | **Corrida final: 22/22** (Avanza 11/11, Nexo 11/11), con todos los cambios publicados | Corridas en ElevenLabs |
 | Conversación real de voz | Hecha | 4 minutos con Laura: verificó, ofreció el plan de dificultad, lo registró y envió el link |
 | Ritmo tras resultados de herramientas | Ajustado (procedure, sonido de fondo, frase de espera), falta oírlo | Una llamada de voz más |
 | Conteo de opciones y concordancia ("veintiún días") | Corregido y publicado, falta oírlo | Una llamada de voz más |
