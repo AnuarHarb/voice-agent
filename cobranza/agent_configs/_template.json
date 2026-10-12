@@ -78,6 +78,9 @@
     "analysis_llm": "gemini-2.5-flash",
     "summary_language": "es",
     "auth": { "enable_auth": false, "allowlist": [] },
+    "overrides": {
+      "conversation_config_override": { "conversation": { "text_only": true } }
+    },
     "privacy": {
       "record_voice": true,
       "retention_days": 90,
@@ -102,9 +105,10 @@
             {
               "is_enabled": true,
               "name": "Sin descuentos inventados",
-              "prompt": "Block the agent reply if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver, reduced payoff, or any amount, interest rate, installment count or date that does not appear in a tool result earlier in the conversation. Politely declining a discount request is allowed.",
+              "prompt": "Block the agent reply only if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver, reduced payoff or a lower total than the tool results show, in any language. Repeating amounts, installments or dates that the tools returned, in any format or language, is allowed. Politely declining a discount request is allowed.",
               "execution_mode": "streaming",
-              "history_message_count": 4,
+              "model": "gemini-3.5-flash",
+              "history_message_count": 12,
               "history_include_tool_calls": true,
               "trigger_action": { "type": "end_call" }
             }

@@ -190,15 +190,19 @@ async def test_dispute_pauses_collection(client, avanza_key, conversation_id, re
     assert blocked.status_code == 409 and blocked.json()["error"] == "account_in_dispute"
 
 
-async def test_opt_out_linked_and_unlinked(client, avanza_key, conversation_id):
-    token = (await verify(client, avanza_key, conversation_id, FIXTURE))["session_token"]
+async def test_opt_out_linked_and_unlinked(client, avanza_key, nexo_key, conversation_id):
+    await verify(client, avanza_key, conversation_id, FIXTURE)
     linked = (await client.post("/tools/opt-out", headers=h(avanza_key), json={
-        "conversation_id": conversation_id, "session_token": token})).json()
+        "conversation_id": conversation_id})).json()
     assert linked["registered"] is True and linked["linked_to_account"] is True
 
     unlinked = (await client.post("/tools/opt-out", headers=h(avanza_key), json={
-        "conversation_id": conversation_id + "-anon", "session_token": ""})).json()
+        "conversation_id": conversation_id + "-anon"})).json()
     assert unlinked["registered"] is True and unlinked["linked_to_account"] is False
+
+    other_tenant = (await client.post("/tools/opt-out", headers=h(nexo_key), json={
+        "conversation_id": conversation_id})).json()
+    assert other_tenant["linked_to_account"] is False
 
     window = (await client.get("/compliance/contact-window", headers=h(avanza_key), params={
         "account_id": FIXTURE_ACCOUNT, "at": "2026-10-13T10:00:00-05:00"})).json()

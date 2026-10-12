@@ -35,7 +35,7 @@
     "installment_amount_text": "$400.000", "total_amount_text": "$1.200.000",
     "first_due_date": "2026-10-19", "first_due_date_text": "lunes 19 de octubre", "idempotent_replay": false
   },
-  "link": { "sent": true, "channel": "whatsapp", "recipient": "WhatsApp terminado en 4567", "already_sent": false },
+  "link": { "sent": true, "channel": "${channel}", "recipient": "${channel_label} terminado en 4567", "already_sent": false },
   "dispute": { "case_ref": "AVA-D-4M8RTW", "status": "open",
     "next_step": "Collection is paused. A specialist reviews the case within 5 business days and contacts the customer." },
   "opt_out": { "registered": true, "linked_to_account": false,

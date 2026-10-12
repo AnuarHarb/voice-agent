@@ -76,6 +76,18 @@ async def _session_account(conn: asyncpg.Connection, token: str) -> str:
     return account_id
 
 
+async def _optional_account(conn: asyncpg.Connection, token: str, conversation_id: str) -> str | None:
+    """Opt-out and callbacks work before verification. The agent has no session token yet at that
+    point, so a verified session from the same conversation links the request to the account."""
+    if token:
+        return await _session_account(conn, token)
+    return await conn.fetchval(
+        """select account_id from cobranza.sessions
+           where conversation_id = $1 and expires_at > now() order by created_at desc limit 1""",
+        conversation_id,
+    )
+
+
 @router.post("/verify-identity", response_model=VerifyIdentityResponse)
 async def verify_identity(
     body: VerifyIdentityRequest, request: Request, tenant: Tenant = Depends(current_tenant)
@@ -352,8 +364,8 @@ async def register_opt_out(
     _track(request, "register_opt_out", body.conversation_id)
     async with tenant_tx(tenant.id) as conn:
         account_ids: list[str] = []
-        if body.session_token:
-            account_ids = [await _session_account(conn, body.session_token)]
+        if account_id := await _optional_account(conn, body.session_token, body.conversation_id):
+            account_ids = [account_id]
         elif body.phone_e164:
             account_ids = [r["account_id"] for r in
                            await conn.fetch("select * from cobranza.accounts_for_phone($1)", body.phone_e164)]
@@ -368,7 +380,7 @@ async def register_opt_out(
         await audit(tenant.id, body.conversation_id, "register_opt_out", "registered",
                     {"linked_accounts": len(account_ids)}, conn=conn)
     if account_ids:
-        message = "Opt-out applied. Avanza Crédito will not contact the customer for collections again."
+        message = f"Opt-out applied. {tenant.name} will not contact the customer for collections again."
     else:
         message = ("Opt-out request recorded, but it could not be linked to an account because identity "
                    "is not verified. Offer to verify identity so it applies to the account.")
@@ -382,12 +394,7 @@ async def request_callback(
     _track(request, "request_callback", body.conversation_id)
     callback_ref = new_ref(tenant.id, "C")
     async with tenant_tx(tenant.id) as conn:
-        account_id = None
-        if body.session_token:
-            account_id = await conn.fetchval(
-                "select account_id from cobranza.sessions where token_hash = $1 and expires_at > now()",
-                sha256_hex(body.session_token),
-            )
+        account_id = await _optional_account(conn, body.session_token, body.conversation_id)
         await conn.execute(
             """insert into cobranza.callbacks
                (callback_ref, tenant_id, account_id, reason, preferred_window, conversation_id)

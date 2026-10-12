@@ -1,7 +1,7 @@
 {
   "name": "Escalamiento a asesor",
   "type": "deterministic",
-  "trigger": "",
+  "trigger": "The customer asks to talk to a person or an advisor, or another procedure hands the customer off to an advisor callback.",
   "steps": [
     { "type": "ask", "instruction": "Ask what day and time of day suits the customer best for a call from an advisor." },
     {

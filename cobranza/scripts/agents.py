@@ -3,6 +3,7 @@
     uv run --project backend python scripts/agents.py build          # render + validate, offline
     uv run --project backend python scripts/agents.py push           # secrets, tools, KB, tests, agent, procedures, publish
     uv run --project backend python scripts/agents.py test [--llm gpt-6-luna]
+    uv run --project backend python scripts/agents.py chat --tenant avanza   # real text conversation, real tools
     uv run --project backend python scripts/agents.py voices         # Colombian Spanish female voices
     uv run --project backend python scripts/agents.py status
 
@@ -38,8 +39,8 @@ def load_env() -> dict:
     env: dict = {}
     for path in (ROOT / "backend" / ".env", ROOT / ".env"):
         if path.exists():
-            env.update({k: v for k, v in dotenv_values(path).items() if v is not None})
-    env.update(os.environ)
+            env.update({k: v for k, v in dotenv_values(path).items() if v})
+    env.update({k: v for k, v in os.environ.items() if v})
     return env
 
 
@@ -109,7 +110,8 @@ def _tool_step(step: dict, extra_procs: dict) -> dict:
             extra_procs[retry_key] = {
                 "name": f"Reintento: {tool}",
                 "type": "deterministic",
-                "trigger": "",
+                "trigger": f"Only when another procedure hands off here because the {tool} tool just failed once. "
+                           f"Never start it from a customer request.",
                 "steps": [
                     {"type": "say", "message": "Tuve un problema para consultar eso. Dame un momento, lo intento de nuevo.",
                      "message_translations": {"en": {"value": "I had a problem checking that. Give me a moment, I'll try again."}}},
@@ -241,7 +243,6 @@ def test_payload(spec: dict, ctx: dict, mocks: dict) -> dict:
     spec = copy.deepcopy(spec)
     mock_refs = spec.pop("mocks", None)
     payload = render(spec, ctx)
-    payload["dynamic_variables"] = {"tenant_id": ctx["tenant_id"], **payload.get("dynamic_variables", {})}
     if mock_refs:
         overrides = {}
         for tool, ref in mock_refs.items():
@@ -374,8 +375,18 @@ def validate_build(tenant: str, built: dict) -> list[str]:
         for err in validator_for(spec, schema).iter_errors(payload):
             errors.append(f"[{tenant}] {name}: {'/'.join(map(str, err.absolute_path))}: {err.message[:300]}")
 
+    assigned = {a["dynamic_variable"] for tool in built["tools"].values() for a in tool.get("assignments", [])}
     for name, tool in built["tools"].items():
         check(f"tool {name}", "ToolRequestModel", {"tool_config": tool})
+        # Placeholders only exist in dashboard tests; a live call has system__ vars and tool assignments.
+        api_schema = tool.get("api_schema", {})
+        for header, value in api_schema.get("request_headers", {}).items():
+            if isinstance(value, dict) and not value.get("variable_name", "system__").startswith("system__"):
+                errors.append(f"[{tenant}] tool {name}: header {header} reads a dynamic variable that live calls lack")
+        body = json.dumps(api_schema.get("request_body_schema", {}))
+        for var in re.findall(r'"dynamic_variable": "([^"]+)"', body):
+            if not var.startswith("system__") and var not in assigned:
+                errors.append(f"[{tenant}] tool {name}: {var} is never assigned by a tool")
     check("agent", "Body_Create_Agent_v1_convai_agents_create_post", built["agent"])
     for name, proc in built["procedures"].items():
         check(f"procedure {name}", "CreateProcedureRequestModel", proc)
@@ -394,6 +405,17 @@ def validate_build(tenant: str, built: dict) -> list[str]:
     prompt = built["agent"]["conversation_config"]["agent"]["prompt"]["prompt"]
     if len(prompt) / 4 > 2000:
         errors.append(f"[{tenant}] system prompt is ~{len(prompt) // 4} tokens; keep it under 2,000")
+    # Rules the API enforces but the OpenAPI schema does not express.
+    custom = built["agent"]["platform_settings"]["guardrails"].get("custom", {}).get("config", {}).get("configs", [])
+    for guardrail in custom:
+        label = f"[{tenant}] guardrail {guardrail['name']}"
+        mode = guardrail.get("execution_mode", "streaming")
+        if guardrail.get("evaluate_full_response_only"):
+            errors.append(f"{label}: evaluate_full_response_only is not supported for voice agents")
+        if guardrail.get("trigger_action", {}).get("type") == "retry" and mode != "blocking":
+            errors.append(f"{label}: retry trigger action needs execution_mode blocking")
+        if mode == "blocking":
+            errors.append(f"{label}: blocking mode holds every reply; simulations time out and callers hear silence")
     leftover = [m for m in PLACEHOLDER.findall(json.dumps(built, ensure_ascii=False, default=str))
                 if not m.startswith(("tool:", "procedure:", "kb:"))]
     if leftover:
@@ -620,6 +642,76 @@ def cmd_voices(args) -> int:
     return 0
 
 
+DEMO_TURNS = [
+    "Hola, quiero ponerme al día con mi crédito.",
+    "Los últimos cuatro de mi cédula son cuatro cuatro uno siete.",
+    "Nací el catorce de mayo de mil novecientos noventa.",
+    "Prefiero el plan en tres cuotas.",
+    "Sí, confirmo ese plan.",
+    "Sí, por favor envíame el link.",
+    "No, eso es todo. Gracias.",
+]
+
+
+async def _chat(agent_id: str, turns: list[str], quiet_secs: float) -> str:
+    import asyncio
+    import websockets
+
+    signed = Api().call("GET", "/v1/convai/conversation/get-signed-url", params={"agent_id": agent_id})["signed_url"]
+    conversation_id = ""
+    async with websockets.connect(signed, max_size=None) as ws:
+        await ws.send(json.dumps({"type": "conversation_initiation_client_data",
+                                  "conversation_config_override": {"conversation": {"text_only": True}}}))
+
+        loop = asyncio.get_running_loop()
+
+        async def drain() -> None:
+            # Audio, VAD and ping events never stop, so only agent output extends the turn.
+            nonlocal conversation_id
+            deadline = loop.time() + quiet_secs
+            while (remaining := deadline - loop.time()) > 0:
+                try:
+                    event = json.loads(await asyncio.wait_for(ws.recv(), timeout=remaining))
+                except asyncio.TimeoutError:
+                    return
+                kind = event.get("type")
+                if kind == "ping":
+                    await ws.send(json.dumps({"type": "pong", "event_id": event["ping_event"]["event_id"]}))
+                elif kind == "conversation_initiation_metadata":
+                    conversation_id = event["conversation_initiation_metadata_event"]["conversation_id"]
+                elif kind == "agent_response":
+                    print(f"agent: {event['agent_response_event']['agent_response']}", flush=True)
+                    deadline = loop.time() + quiet_secs
+                elif kind == "agent_tool_response":
+                    tool = event.get("agent_tool_response", {})
+                    print(f"       [{tool.get('tool_name')}{' error' if tool.get('is_error') else ''}]", flush=True)
+                    deadline = loop.time() + quiet_secs
+
+        try:
+            await drain()
+            for text in turns:
+                print(f"user:  {text}", flush=True)
+                await ws.send(json.dumps({"type": "user_message", "text": text}))
+                await drain()
+        except websockets.ConnectionClosed as closed:
+            print(f"(call ended: {closed.rcvd.reason if closed.rcvd else 'closed'})")
+    return conversation_id
+
+
+def cmd_chat(args) -> int:
+    import asyncio
+
+    state = load_state()
+    tenant = args.tenants[0]
+    agent_id = state.get("tenants", {}).get(tenant, {}).get("agent_id")
+    if not agent_id:
+        raise SystemExit(f"[{tenant}] not pushed yet")
+    conversation_id = asyncio.run(_chat(agent_id, args.say or DEMO_TURNS, args.quiet))
+    print(f"\nconversation_id: {conversation_id}")
+    print(f"https://elevenlabs.io/app/agents/history/{conversation_id}")
+    return 0
+
+
 def cmd_status(args) -> int:
     state = load_state()
     print(json.dumps(state, indent=2) if state.get("tenants") else "nothing pushed yet")
@@ -630,7 +722,7 @@ def cmd_status(args) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("build", "push", "test", "voices", "status"):
+    for name in ("build", "push", "test", "chat", "voices", "status"):
         p = sub.add_parser(name)
         p.add_argument("--tenant", dest="tenants", action="append", choices=TENANTS)
         if name == "push":
@@ -640,9 +732,12 @@ def main() -> int:
         if name == "test":
             p.add_argument("--llm", help="run the suite with another model, e.g. gpt-6-luna")
             p.add_argument("--repeat", type=int, default=1)
+        if name == "chat":
+            p.add_argument("--say", action="append", help="user turn; repeat for several (default: demo script)")
+            p.add_argument("--quiet", type=float, default=8.0, help="seconds of silence that end an agent turn")
     args = parser.parse_args()
     args.tenants = args.tenants or TENANTS
-    return {"build": cmd_build, "push": cmd_push, "test": cmd_test,
+    return {"build": cmd_build, "push": cmd_push, "test": cmd_test, "chat": cmd_chat,
             "voices": cmd_voices, "status": cmd_status}[args.command](args)
 
 

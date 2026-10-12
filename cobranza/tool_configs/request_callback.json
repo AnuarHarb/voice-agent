@@ -12,11 +12,11 @@
     "method": "POST",
     "request_headers": {
       "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
-      "X-Tenant-Id": { "variable_name": "tenant_id" }
+      "X-Tenant-Id": "${tenant_id}"
     },
     "request_body_schema": {
       "type": "object",
-      "required": ["reason", "preferred_window", "session_token", "conversation_id"],
+      "required": ["reason", "preferred_window", "conversation_id"],
       "properties": {
         "reason": {
           "type": "string",
@@ -26,7 +26,6 @@
           "type": "string",
           "description": "When the customer prefers the call, in Spanish, for example \"mañana en la mañana\". If they did not say, use \"siguiente día hábil\"."
         },
-        "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
         "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" }
       }
     }

@@ -15,7 +15,7 @@
     "method": "POST",
     "request_headers": {
       "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
-      "X-Tenant-Id": { "variable_name": "tenant_id" }
+      "X-Tenant-Id": "${tenant_id}"
     },
     "request_body_schema": {
       "type": "object",

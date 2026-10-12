@@ -1,7 +1,7 @@
 {
   "name": "Escalamiento por falla técnica",
   "type": "deterministic",
-  "trigger": "",
+  "trigger": "Only when a retry procedure hands off here because a tool failed twice in a row. Never start it from a customer request.",
   "steps": [
     {
       "type": "tool_call",
