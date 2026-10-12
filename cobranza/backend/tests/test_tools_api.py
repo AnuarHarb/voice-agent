@@ -44,7 +44,7 @@ async def test_happy_path_verify_options_plan_link_and_pay(client, avanza_key, c
 
     link_body = {**base, "plan_ref": plan["plan_ref"]}
     link = (await client.post("/tools/payment-link", headers=h(avanza_key), json=link_body)).json()
-    assert link == {"sent": True, "channel": "whatsapp", "recipient": link["recipient"], "already_sent": False}
+    assert link == {"sent": True, "channel": "telegram", "recipient": link["recipient"], "already_sent": False}
     again = (await client.post("/tools/payment-link", headers=h(avanza_key), json=link_body)).json()
     assert again["already_sent"] is True
 

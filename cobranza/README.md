@@ -1,6 +1,6 @@
 # Cobranza responsable · Avanza Crédito
 
-Voice agent on ElevenLabs Agents that handles early-stage collections in Spanish for a fictional Colombian fintech. It verifies identity, offers only the plans the credit policy allows, and sends the payment link over WhatsApp or Telegram. Two tenants share one template: **Avanza Crédito** (WhatsApp) and **Nexo Finanzas** (Telegram).
+Voice agent on ElevenLabs Agents that handles early-stage collections in Spanish for a fictional Colombian fintech. It verifies identity, offers only the plans the credit policy allows, and sends the payment link over Telegram. Two tenants share one template: **Avanza Crédito** and **Nexo Finanzas**. A WhatsApp Cloud API channel is implemented behind the same adapter but not enabled: it needs a Meta-approved utility template.
 
 ```
 cobranza/
@@ -58,7 +58,7 @@ uv run pytest               # 29 tests, hits the real database
 
 Railway: create a service with root directory `cobranza/backend` (it uses `Dockerfile` and `railway.json`, health check `/health`), generate a public domain, and set the variables from `backend/.env.example`. Do not put `TENANT_KEY_*` or `DATABASE_ADMIN_URL` in Railway: the backend only stores key hashes.
 
-With `CHANNEL_MODE=log`, payment links are printed in the logs instead of being sent. Use `live` once WhatsApp or Telegram credentials are set. The link opens `/pay/<token>`, a simulated checkout page.
+With `CHANNEL_MODE=log`, payment links are printed in the logs instead of being sent. Use `live` once `TELEGRAM_BOT_TOKEN` is set and the customer's `telegram_chat_id` is in the vault (`scripts/admin.py set-recipient`). The link opens `/pay/<token>`, a simulated checkout page.
 
 ## 3. Agent (ElevenLabs)
 

@@ -10,7 +10,7 @@ Documento de trabajo para preparar el video del take-home (Deployment Strategist
 
 ## 1. La idea en una frase
 
-Un agente de voz en ElevenLabs que llama o atiende a clientes en mora temprana de una fintech colombiana, verifica su identidad, le ofrece **solo** los planes que permite la política de crédito, registra el acuerdo y le manda el link de pago por WhatsApp o Telegram, todo dentro de la Ley 2300 ("Dejen de fregar").
+Un agente de voz en ElevenLabs que llama o atiende a clientes en mora temprana de una fintech colombiana, verifica su identidad, le ofrece **solo** los planes que permite la política de crédito, registra el acuerdo y le manda el link de pago por Telegram, todo dentro de la Ley 2300 ("Dejen de fregar").
 
 **El principio que guía todo el diseño:**
 
@@ -30,7 +30,7 @@ Un agente de voz en ElevenLabs que llama o atiende a clientes en mora temprana d
 
 **Enfoque:** cobranza humana, no agresiva. Cumplir la ley, ofrecer planes realistas y escalar a una persona cuando hay dificultad económica. Eso es más ético y además es mejor historia comercial.
 
-**Avanza Crédito** (WhatsApp) y **Nexo Finanzas** (Telegram) son ficticias. Existen dos para demostrar que el diseño es multi-cliente de verdad.
+**Avanza Crédito** y **Nexo Finanzas** son ficticias. Existen dos para demostrar que el diseño es multi-cliente de verdad.
 
 ---
 
@@ -41,7 +41,7 @@ flowchart LR
     C[Cliente al teléfono] <--> A[Agente ElevenLabs<br/>voz, LLM, procedures, guardrails]
     A -- webhooks con header secreto --> B[Backend FastAPI en Railway<br/>capa de integración]
     B -- rol sin bypass de RLS --> D[(Supabase Postgres<br/>esquema cobranza)]
-    B --> W[WhatsApp Cloud API / Telegram Bot]
+    B --> W[Telegram Bot API · WhatsApp listo detrás del adaptador]
     A -- post-call webhook HMAC --> B
 ```
 
@@ -111,7 +111,7 @@ Separado como pide el spec:
 | `get_account_summary` | Estado de la cuenta | Solo enmascarado: "terminada en 4417", montos en texto para voz ("$1.200.000") |
 | `get_payment_options` | Hasta 3 planes | **Los calcula el código** desde la política; cada uno con `plan_id` |
 | `create_payment_plan` | Registra el acuerdo | Solo acepta un `plan_id` que se ofreció **a esa misma sesión**. Idempotente |
-| `send_payment_link` | Envía el link por el canal de la fintech | WhatsApp o Telegram detrás del mismo adaptador |
+| `send_payment_link` | Envía el link por el canal de la fintech | Telegram hoy; WhatsApp ya implementado detrás del mismo adaptador |
 | `register_dispute` | Abre una disputa | Pausa la cobranza de esa cuenta |
 | `register_opt_out` | "No me vuelvan a llamar" | Funciona **sin** verificación; si el cliente se verificó en la misma llamada, se vincula a su cuenta |
 | `request_callback` | Agenda la llamada de un asesor | También funciona sin verificación |
@@ -136,7 +136,7 @@ Separado como pide el spec:
 
 **Autenticación de cada fintech:** cada agente manda `X-Tenant-Key`, una llave guardada como secreto del workspace de ElevenLabs. El backend la convierte en hash SHA-256 y la busca; la base nunca ve la llave original. También manda `X-Tenant-Id`; si no coincide con la llave, se rechaza y queda en la bitácora.
 
-**Adaptador de canal:** `send_payment_link` no sabe si el mensaje sale por WhatsApp o Telegram. Cada fintech tiene un campo `channel`, y cambiar de canal es cambiar ese valor. Con `CHANNEL_MODE=log`, el link se imprime en los logs en vez de enviarse; sirve para probar sin credenciales de Meta.
+**Adaptador de canal:** `send_payment_link` no sabe si el mensaje sale por WhatsApp o Telegram. Cada fintech tiene un campo `channel`, y cambiar de canal es cambiar ese valor. Las dos usan Telegram: WhatsApp exige una plantilla de utilidad aprobada por Meta porque la empresa escribe primero, y eso no cabía en el plazo. Con `CHANNEL_MODE=log`, el link se imprime en los logs en vez de enviarse; así corren las pruebas.
 
 ### 4.3 El agente como código
 
@@ -422,7 +422,7 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 ### Antes de grabar
 
 - [ ] Hacer una llamada completa de prueba con Laura; confirmar en Supabase que quedó el plan (`cobranza.payment_plans`) y el registro en `audit_log`.
-- [ ] Telegram listo: `TELEGRAM_BOT_TOKEN` y `CHANNEL_MODE=live` en Railway, Avanza con canal `telegram` y tu `chat_id` en la bóveda de Laura (`admin.py set-recipient acc_avz_0001 --telegram-chat-id ...`). Telegram abierto en el celular, en cámara.
+- [ ] Telegram listo: `TELEGRAM_BOT_TOKEN` y `CHANNEL_MODE=live` en Railway (los clientes de prueba ya tienen tu `chat_id`). Haberle escrito `/start` al bot una vez. Telegram abierto en el celular, en cámara.
 - [ ] Pestañas abiertas, en orden: la consola (https://dashboard-production-ea78.up.railway.app), dashboard del agente en ElevenLabs (procedures y pruebas), Supabase (Table Editor con el esquema `cobranza`), el repo.
 - [ ] Notificaciones cerradas; probar el micrófono.
 
@@ -478,6 +478,7 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 > "What I'd do next with a real bank:
 > - turn on transcript redaction and zero-retention mode, which are Enterprise features (I tried: the API returns 403 on this plan);
 > - add real telephony with live transfer to a human;
+> - switch the payment link to WhatsApp once Meta approves the utility template; the channel is already written;
 > - run outbound campaigns with batch calls gated by the Ley 2300 contact-window endpoint, which is already built;
 > - get legal review of the disclosure and the data notice (Ley 1581 and Ley 2300);
 > - run more probabilistic test passes, building tests from real calls that went wrong;
@@ -494,5 +495,5 @@ Formato del spec: **narración en inglés**, agente en español con la transcrip
 | ¿Cómo escala a 50 fintechs? | Una plantilla y un webhook de inicio que resuelva el tenant según el número marcado; para bancos, un esquema o una base por tenant. |
 | ¿Y si el backend se cae? | Reintenta una vez, ofrece un asesor y nunca inventa datos (prueba 10). |
 | ¿Cuánto cuesta una llamada? | ~US$0.08 por minuto más el LLM; con 3 a 4 minutos por llamada, se compara contra el costo de un gestor por contacto. |
-| ¿Por qué Telegram en Nexo? | Para mostrar el adaptador y porque la plantilla de WhatsApp necesita aprobación de Meta: es un trade-off honesto. |
+| ¿Por qué Telegram y no WhatsApp? | WhatsApp necesita una plantilla aprobada por Meta, que tarda días. El canal de WhatsApp ya está escrito detrás del adaptador; activarlo es cambiar un valor por fintech. |
 | ¿Qué no está probado? | El envío real por WhatsApp (falta la aprobación de la plantilla) y las llamadas telefónicas reales. |
