@@ -129,13 +129,14 @@ tbody th { font-weight: 650; }
 .conversations details { min-width: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 0.5rem; }
 .conversations details[open] { border-color: var(--accent); }
 .conversations summary {
-  display: grid; grid-template-columns: 9rem minmax(0, 1fr) auto 6.5rem; gap: 1rem; align-items: center;
+  display: grid; grid-template-columns: 11rem minmax(0, 1fr) auto 6.5rem; gap: 1rem; align-items: center;
   padding: 0.85rem 1rem; cursor: pointer; list-style: none;
 }
 .conversations summary::-webkit-details-marker { display: none; }
 .conversations summary::before { content: '▸'; position: absolute; left: 0.75rem; color: var(--muted); }
 .conversations details[open] summary::before { content: '▾'; }
 .conversations summary { position: relative; padding-left: 1.75rem; }
+.conversations summary time { white-space: nowrap; }
 .who { font-weight: 620; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .outcome { font-size: var(--step--1); font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--paper); color: var(--muted); }
 .outcome-promesa { background: var(--accent-soft); color: var(--accent); }
