@@ -145,7 +145,7 @@ El agente no se configuró a mano en el dashboard: está en archivos JSON dentro
 | Carpeta | Contenido |
 | --- | --- |
 | `agent_configs/_template.json` | La configuración completa del agente con huecos (`${...}`) |
-| `agent_configs/avanza.json`, `nexo.json` | Lo que cambia por fintech: nombre del agente (Sofía, Valentina), voz, canal, primer mensaje, llave |
+| `agent_configs/avanza.json`, `nexo.json` | Lo que cambia por fintech: nombre del agente (Sofía, Horacio), voz, canal, primer mensaje, llave |
 | `prompts/system_prompt.md` | El system prompt (unos 900 tokens; la guía recomienda menos de 2.000) |
 | `tool_configs/` | Una herramienta por archivo |
 | `procedure_configs/` | Los 8 procedures |
