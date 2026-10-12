@@ -407,6 +407,8 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
 - dijo "tienes tres opciones", presentó dos y preguntó "¿cuál de estas dos?". El procedimiento ya decía "nunca digas cuántas opciones hay", y aun así lo hizo. La instrucción ahora da el patrón exacto: empezar con "Puedes pagar…", seguir con "O también…" y cerrar con "¿Cuál te funciona mejor?";
 - dijo "veintiuno días". El prompt ahora tiene una regla de concordancia: "veintiún días", "un millón de pesos", "una cuota".
 - **Lección:** con un modelo rápido como Haiku, una prohibición ("no cuentes") funciona peor que un ejemplo de qué decir en su lugar.
+- **Y aun así volvió a contarlas.** La causa de fondo era el contrato: `get_payment_options` devolvía las 3 opciones de Avanza en la misma lista (pago único, cuotas y dificultad), y el modelo cuenta lo que ve. **Arreglo estructural:** el plan de dificultad sale ahora en un campo aparte, `hardship_option`, y `options` solo trae lo que se puede ofrecer a cualquiera. El backend sigue registrando las tres ofertas, así que el `plan_id` de dificultad sigue siendo válido. Resultado: 29/29 en pytest, 11/11 en Avanza, y en la conversación real ya no cuenta las opciones.
+- **Lección de fondo:** si el modelo insiste en un error a pesar del prompt, el arreglo está en el contrato de la herramienta: no darle lo que no debe decir.
 
 ### La consola
 
