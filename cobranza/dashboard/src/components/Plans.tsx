@@ -41,6 +41,14 @@ export function Plans({ plans }: { plans: Plan[] }) {
                   <td>{PLAN_STATUS[p.status]}</td>
                   <td>
                     {p.link_status ? `${LINK_STATUS[p.link_status]}${p.link_channel ? ` por ${p.link_channel}` : ''}` : 'Sin link'}
+                    {p.pay_url && (
+                      <>
+                        {' · '}
+                        <a href={p.pay_url} target="_blank" rel="noreferrer">
+                          {p.status === 'paid' ? 'Ver' : 'Abrir y pagar'}
+                        </a>
+                      </>
+                    )}
                   </td>
                   <td><time dateTime={p.created_at}>{dateTime(p.created_at)}</time></td>
                 </tr>

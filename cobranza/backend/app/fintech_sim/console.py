@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.config import get_settings
 from app.db import console_tx
 
 router = APIRouter(prefix="/console", tags=["fintech console"])
@@ -19,7 +20,7 @@ def _plain(row) -> dict:
     out = {}
     for key, value in dict(row).items():
         if isinstance(value, Decimal):
-            value = int(value)
+            value = int(value) if value == value.to_integral_value() else float(value)
         elif key == "detail" and isinstance(value, str):
             value = json.loads(value)
         out[key] = value
@@ -63,7 +64,8 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
         plans = await _rows(conn, """
             select p.plan_ref, v.full_name, a.account_last4, p.installments, p.installment_amount,
                    p.total_amount, p.first_due_date, p.hardship, p.status, l.status as link_status,
-                   l.channel as link_channel, l.sent_at as link_sent_at, p.conversation_id, p.created_at
+                   l.channel as link_channel, l.sent_at as link_sent_at, l.link_token,
+                   p.conversation_id, p.created_at
             from cobranza.payment_plans p
             join cobranza.accounts a on a.id = p.account_id
             join cobranza.pii_vault v on v.person_token = a.person_token
@@ -80,7 +82,8 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
                      coalesce(o.received_at - make_interval(secs => coalesce(o.duration_secs, 0)), e.first_event)
                        as started_at,
                      coalesce(e.tool_calls, 0) as tool_calls, o.outcome, o.language, o.duration_secs,
-                     o.call_successful, o.promise_amount, o.promise_date, o.late_reason, o.hardship
+                     o.call_successful, o.promise_amount, o.promise_date, o.late_reason, o.hardship,
+                     o.sentiment_label, o.sentiment_score, o.frustration_score, o.min_sentiment_score
               from events e full join cobranza.call_outcomes o on o.conversation_id = e.conversation_id
             )
             select calls.*, who.full_name
@@ -119,6 +122,11 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
             left join cobranza.pii_vault v on v.person_token = a.person_token
             where k.opt_out and ($1 or k.""" + _REAL + """)
             order by created_at desc""", include_tests)
+
+    base = get_settings().public_base_url.rstrip("/")
+    for plan in plans:
+        token = plan.pop("link_token")
+        plan["pay_url"] = f"{base}/pay/{token}" if token else None
 
     return {
         "tenant": dict(tenant),

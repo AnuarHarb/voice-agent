@@ -31,6 +31,7 @@ export type Plan = {
   link_status: 'pending' | 'sent' | 'failed' | 'paid' | null
   link_channel: string | null
   link_sent_at: string | null
+  pay_url: string | null
   conversation_id: string | null
   created_at: string
 }
@@ -47,6 +48,10 @@ export type Conversation = {
   promise_date: string | null
   late_reason: string | null
   hardship: boolean | null
+  sentiment_label: 'positive' | 'neutral' | 'negative' | null
+  sentiment_score: number | null
+  frustration_score: number | null
+  min_sentiment_score: number | null
   full_name: string | null
 }
 

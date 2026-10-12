@@ -24,6 +24,12 @@ const DIGITS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete'
 
 export const spokenDigits = (digits: string) => [...digits].map((d) => DIGITS[Number(d)]).join(' ')
 
+export const percent = (share: number) => `${Math.round(share * 100)} %`
+
+export const signed = (score: number) => (score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1))
+
+export const SENTIMENT: Record<string, string> = { positive: 'Tranquilo', neutral: 'Neutral', negative: 'Molesto' }
+
 export const OUTCOME: Record<string, string> = {
   promesa: 'Plan registrado',
   disputa: 'Disputa abierta',

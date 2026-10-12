@@ -19,6 +19,8 @@
       "prompt": {
         "prompt": "${file:prompts/system_prompt.md}",
         "llm": "${llm}",
+        "backup_llm_config": { "preference": "override", "order": ["gpt-5.6-luna", "gemini-3.5-flash"] },
+        "cascade_timeout_seconds": 5,
         "temperature": 0.0,
         "timezone": "America/Bogota",
         "ignore_default_personality": true,
@@ -68,10 +70,20 @@
     "turn": {
       "turn_timeout": 8,
       "spelling_patience": "auto",
-      "speculative_turn": true
+      "speculative_turn": true,
+      "interruption_ignore_terms": ["ajá", "aja", "mjm", "ajá ajá", "ok", "okey", "ya", "claro", "uh huh", "mm-hmm"],
+      "soft_timeout_config": {
+        "timeout_seconds": 2.5,
+        "use_llm_generated_message": true,
+        "llm_generated_message_prompt_override": "Write a filler of two to four words that tells the customer you are still there, in the language the customer is speaking, calm and natural, for example 'Mmm, déjame ver.' or 'Un momento.' Never mention amounts, dates or account details.",
+        "message": "Mmm, déjame ver.",
+        "max_soft_timeouts_per_generation": 1,
+        "disable_until_first_user_message": true
+      }
     },
     "conversation": {
       "max_duration_seconds": 360,
+      "background_sound": { "source_type": "preset", "source_id": "office1", "volume": 0.08, "crossfade_loop": true },
       "client_events": ["audio", "interruption", "user_transcript", "agent_response", "agent_response_correction", "agent_tool_request", "agent_tool_response"]
     }
   },
@@ -195,7 +207,9 @@
       "text_input_enabled": true,
       "supports_text_only": true,
       "language_selector": true,
-      "feedback_mode": "end"
+      "feedback_mode": "end",
+      "show_agent_status": true,
+      "show_conversation_id": true
     }
   }
 }

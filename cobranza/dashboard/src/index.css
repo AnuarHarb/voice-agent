@@ -180,6 +180,9 @@ tbody th { font-weight: 650; }
 .outcome-promesa { background: var(--accent-soft); color: var(--accent); }
 .outcome-escalado, .outcome-disputa { background: var(--mora-bg); color: var(--mora); }
 .conversations summary > .muted { text-align: right; font-size: var(--step--1); }
+.mood { font-weight: 650; }
+.mood-positive { color: var(--accent); }
+.mood-negative { color: var(--warn); }
 
 .conversation-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 0 1rem 1.25rem 1.75rem; }
 .conversation-body h3 { font-size: var(--step-0); font-weight: 650; }

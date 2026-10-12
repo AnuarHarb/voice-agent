@@ -257,6 +257,10 @@ async def test_post_call_webhook_stores_outcome(client, conversation_id):
                     "promise_date": {"value": "2026-10-16"}, "late_reason": {"value": "Le pagaron tarde"},
                     "hardship": {"value": False}, "language": {"value": "es"},
                 },
+                "sentiment_analysis": {
+                    "overall_label": "positive", "overall_sentiment_score": 0.6, "overall_frustration_score": 0.1,
+                    "min_user_sentiment_score": -0.3, "max_user_frustration_score": 0.1, "num_scored_user_turns": 5,
+                },
             },
         },
     }
@@ -276,3 +280,5 @@ async def test_post_call_webhook_stores_outcome(client, conversation_id):
     assert (row["outcome"], int(row["promise_amount"]), str(row["promise_date"]), row["duration_secs"]) == (
         "promesa", 1_200_000, "2026-10-16", 201)
     assert json.loads(row["evaluation"]) == {"ai_disclosure": "success"}
+    assert (row["sentiment_label"], float(row["sentiment_score"]), float(row["min_sentiment_score"])) == (
+        "positive", 0.6, -0.3)

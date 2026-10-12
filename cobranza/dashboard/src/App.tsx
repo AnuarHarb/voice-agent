@@ -19,6 +19,8 @@ function Summary({ data }: { data: Overview }) {
   const recovered = data.plans.filter((p) => p.status !== 'cancelled').reduce((sum, p) => sum + p.total_amount, 0)
   const paid = data.plans.filter((p) => p.status === 'paid').length
   const n = data.customers.length
+  const scored = data.conversations.filter((c) => c.sentiment_label)
+  const calm = scored.filter((c) => c.sentiment_label !== 'negative').length
   return (
     <p className="lede">
       {n} {n === 1 ? 'cliente debe' : 'clientes deben'} <strong>{money(overdue)}</strong> en mora.{' '}
@@ -29,6 +31,14 @@ function Summary({ data }: { data: Overview }) {
           Por voz se han comprometido <strong>{money(recovered)}</strong> en{' '}
           {data.plans.length === 1 ? '1 plan' : `${data.plans.length} planes`}
           {paid > 0 ? `, ${paid} ya ${paid === 1 ? 'pagado' : 'pagados'}` : ''}.
+        </>
+      )}
+      {scored.length > 0 && (
+        <>
+          {' '}
+          {scored.length === 1
+            ? `La llamada analizada terminó con el cliente ${calm ? 'tranquilo' : 'molesto'}.`
+            : `${calm === scored.length ? 'Todas las' : `${calm} de ${scored.length}`} llamadas analizadas terminaron sin el cliente molesto.`}
         </>
       )}
     </p>

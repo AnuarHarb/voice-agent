@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, type AuditEvent, type Conversation } from '../api'
-import { OUTCOME, TOOL, clock, dateTime, duration, historyUrl, money, shortDate } from '../format'
+import { OUTCOME, SENTIMENT, TOOL, clock, dateTime, duration, historyUrl, money, percent, shortDate, signed } from '../format'
 
 const RESULT: Record<string, string> = {
   verified: 'verificada',
@@ -79,6 +79,17 @@ function Row({ tenant, c }: { tenant: string; c: Conversation }) {
             {c.late_reason && (<div><dt>Motivo de la mora</dt><dd>{c.late_reason}</dd></div>)}
             {c.promise_amount != null && (<div><dt>Promesa</dt><dd>{money(c.promise_amount)}{c.promise_date ? `, desde el ${shortDate(c.promise_date)}` : ''}</dd></div>)}
             {c.hardship != null && (<div><dt>Dificultad económica</dt><dd>{c.hardship ? 'Sí' : 'No'}</dd></div>)}
+            {c.sentiment_label && (
+              <div>
+                <dt>Ánimo al final</dt>
+                <dd>
+                  <span className={`mood mood-${c.sentiment_label}`}>{SENTIMENT[c.sentiment_label]}</span>
+                  {c.frustration_score != null && `, frustración ${percent(c.frustration_score)}`}
+                  {c.min_sentiment_score != null && c.sentiment_score != null && c.min_sentiment_score < c.sentiment_score &&
+                    `; su punto más bajo fue ${signed(c.min_sentiment_score)} y cerró en ${signed(c.sentiment_score)}`}
+                </dd>
+              </div>
+            )}
             <div><dt>Herramientas llamadas</dt><dd>{c.tool_calls}</dd></div>
           </dl>
           <h3>Lo que hizo el agente, paso a paso</h3>

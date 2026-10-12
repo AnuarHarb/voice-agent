@@ -51,6 +51,13 @@ def _as_amount(value) -> int | None:
         return int(digits) if digits else None
 
 
+def _score(value) -> float | None:
+    try:
+        return max(-1.0, min(1.0, round(float(value), 2)))
+    except (TypeError, ValueError):
+        return None
+
+
 @router.post("/post-call")
 async def post_call(request: Request) -> JSONResponse:
     settings = get_settings()
@@ -77,24 +84,32 @@ async def post_call(request: Request) -> JSONResponse:
     outcome = _value(results, "outcome")
     outcome = outcome if outcome in _OUTCOMES else ("sin_acuerdo" if outcome else None)
     language = _value(results, "language")
+    sentiment = analysis.get("sentiment_analysis") or {}
+    label = sentiment.get("overall_label")
 
     async with tenant_tx(tenant["id"]) as conn:
         await conn.execute(
             """insert into cobranza.call_outcomes
                (conversation_id, tenant_id, agent_id, outcome, promise_amount, promise_date, late_reason,
-                hardship, language, call_successful, evaluation, duration_secs)
-               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)
+                hardship, language, call_successful, evaluation, duration_secs,
+                sentiment_label, sentiment_score, frustration_score, min_sentiment_score)
+               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15, $16)
                on conflict (conversation_id) do update set
                  outcome = excluded.outcome, promise_amount = excluded.promise_amount,
                  promise_date = excluded.promise_date, late_reason = excluded.late_reason,
                  hardship = excluded.hardship, language = excluded.language,
                  call_successful = excluded.call_successful, evaluation = excluded.evaluation,
-                 duration_secs = excluded.duration_secs, received_at = now()""",
+                 duration_secs = excluded.duration_secs, sentiment_label = excluded.sentiment_label,
+                 sentiment_score = excluded.sentiment_score, frustration_score = excluded.frustration_score,
+                 min_sentiment_score = excluded.min_sentiment_score, received_at = now()""",
             conversation_id, tenant["id"], agent_id, outcome,
             _as_amount(_value(results, "promise_amount")), _as_date(_value(results, "promise_date")),
             (str(_value(results, "late_reason") or "")[:200] or None), _as_bool(_value(results, "hardship")),
             (str(language)[:5] if language else None), analysis.get("call_successful"),
             json.dumps(evaluation), (data.get("metadata") or {}).get("call_duration_secs"),
+            label if label in ("positive", "neutral", "negative") else None,
+            _score(sentiment.get("overall_sentiment_score")), _score(sentiment.get("overall_frustration_score")),
+            _score(sentiment.get("min_user_sentiment_score")),
         )
         account_id = await conn.fetchval(
             "select account_id from cobranza.sessions where conversation_id = $1 order by created_at desc limit 1",
