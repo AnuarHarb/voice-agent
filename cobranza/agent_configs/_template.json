@@ -119,7 +119,7 @@
             {
               "is_enabled": true,
               "name": "Sin descuentos inventados",
-              "prompt": "Block the agent reply if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver or reduced payoff, or if it states an amount, installment count or date that clearly differs from every tool result in the history, in any language. Do not block for formatting or language differences ($1,200,000 = $1.200.000 = un millón doscientos mil pesos; October 16 = 16 de octubre), for numbers cut off at the end of a reply that is still being spoken, or for repeating the customer's own words back. Politely declining a discount request is allowed.",
+              "prompt": "Block the agent reply if it offers, promises or agrees to a discount, debt forgiveness (condonación), interest waiver or reduced payoff, or if it states an amount, installment count or date that clearly differs from every tool result in the history, in any language. Tool results write amounts in Colombian pesos with dots as thousands separators, never decimals ($416.700 = 416,700 pesos = cuatrocientos dieciséis mil setecientos pesos), and write dates in Spanish; the agent may say them in English. Do not block for formatting or language differences ($1,200,000 = $1.200.000 = un millón doscientos mil pesos; miércoles 11 de noviembre = Wednesday, November 11th), for a plan reference or total taken from create_payment_plan, for numbers cut off at the end of a reply that is still being spoken, or for repeating the customer's own words back. Politely declining a discount request is allowed.",
               "execution_mode": "streaming",
               "model": "claude-haiku-4-5",
               "history_message_count": 12,
