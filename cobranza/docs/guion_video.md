@@ -200,7 +200,7 @@ El agente no se configuró a mano en el dashboard: está en archivos JSON dentro
 | Focus | Activado |
 | Manipulación (prompt injection) | Activado |
 | Custom "Sin amenazas" | Streaming, cuelga. Bloquea mencionar centrales de riesgo, demandas o consecuencias |
-| Custom "Sin descuentos inventados" | Streaming, cuelga. Evaluador `claude-haiku-4-5`. Bloquea descuentos y montos o fechas que no vengan de una herramienta |
+| Custom "Sin descuentos inventados" | Streaming, cuelga. Evaluador `claude-haiku-4-5`. Bloquea ofrecer descuentos, condonaciones o rebajas. Los montos y fechas correctos los garantiza el backend (error 33) |
 
 **Recolección de datos y evaluación:**
 
@@ -332,7 +332,7 @@ Cada error tiene el mismo formato: **síntoma → causa → arreglo → por qué
 5. **Decisión:** volver a lo que recomienda la documentación para voz (**streaming y colgar**) y atacar la causa:
    - un prompt que tolera formatos, idiomas y números cortados;
    - y un **evaluador más capaz**: `claude-sonnet-4-6` en vez de `gemini-3.5-flash`.
-6. **Resultado:** 10/10 en las pruebas que tocan el guardrail (inglés, descuento, camino ideal y dificultad), manteniendo la regla completa del spec.
+6. **Resultado:** 10/10 en las pruebas que tocan el guardrail (inglés, descuento, camino ideal y dificultad), manteniendo la regla completa del spec. (Después, las llamadas reales mostraron otros falsos positivos y la regla se acotó a descuentos: ver el error 33.)
 7. **Ajuste por costo tras la primera llamada real:** la factura mostró que el evaluador Sonnet costaba ~US$0.42 por llamada, 10 veces lo que costaba el agente con Haiku. Con el prompt ya afinado, se cambió a `claude-haiku-4-5` y pasaron las 4 pruebas que tocan el guardrail. La lección: el prompt corregido era lo que importaba; el modelo grande fue un andamio.
 
 **Por qué no simplemente quitar el guardrail:** el riesgo que cubre (prometer un descuento que no existe) es el más caro del caso. Además, el backend ya impide registrar un plan no ofrecido, así que hay dos capas independientes.
@@ -434,6 +434,18 @@ Antes de gastar créditos, se probó el canal llamando a las herramientas de pro
 - **Causa:** no fue el modelo de respaldo. El historial muestra que lo generó Haiku, sin modo de razonamiento, justo después de que la clienta la interrumpiera a mitad de la confirmación. La respuesta cortada quedó en el contexto y Haiku escribió primero una nota sobre la conversación, que se convirtió en voz como todo lo que escribe.
 - **Arreglo:** una regla explícita en el prompt: todo lo que escribe se dice en voz alta, así que solo escribe lo que le dice al cliente, nunca notas ni análisis, tampoco después de una interrupción.
 - **Lo bueno de esa misma llamada:** rechazó dos veces el descuento, siguió en inglés, ofreció el plan de dificultad solo cuando la clienta dijo que estaba enferma, ofreció un asesor y colgó con `end_call`. Un cambio de tiempos solo se valida con una llamada de voz, y un ajuste "cosmético" puede romper el flujo.
+
+**32. El agente avanzaba sin esperar la fecha de nacimiento.**
+- **Síntoma:** Sofía y Horacio pedían la fecha y, en el mismo turno, llamaban `verify_identity` con `birth_date: "<UNKNOWN>"`. El backend respondía 422, el procedure lo trataba como falla técnica, reintentaba con lo mismo y escalaba a un asesor.
+- **Causa:** el paso de la cédula decía qué respuesta era válida ("four digits"); el de la fecha no, y el modelo daba el paso por cumplido apenas preguntaba.
+- **Arreglo, en dos capas:** el paso de la fecha ahora define la respuesta válida. Y un dato ilegible ya no es un error: el backend responde `incomplete: true` sin gastar intento, y el procedure vuelve a pedir solo ese dato. Una falla de datos del cliente no es una falla técnica.
+
+**33. El guardrail de montos cortaba llamadas buenas.**
+- **Síntoma:** dos llamadas reales se cortaron con montos correctos: Sofía confirmando el plan en inglés y Horacio leyendo el saldo justo después de verificar.
+- **Patrón:** en los dos casos el agente llamó la herramienta directamente, por fuera del paso del procedure, y la respuesta siguiente fue la bloqueada. La hipótesis es que el evaluador no alcanzaba a ver ese resultado y creyó inventados los montos. ElevenLabs no guarda el texto bloqueado, así que no se puede confirmar desde afuera.
+- **Intento descartado de nuevo:** blocking + reintentar. El propio `build` lo frenó con la lección del error 17: en voz, el modo blocking es silencio.
+- **Decisión:** el guardrail ahora solo bloquea ofrecer descuentos, condonaciones o rebajas, que es el riesgo que el cliente oye. Que los montos sean los correctos ya lo garantizan otras capas: salen solo del backend, `create_payment_plan` rechaza planes no ofrecidos y la evaluación post-llamada lo revisa.
+- **Lección:** cada capa debe cuidar lo que solo ella puede cuidar. Validar cifras con un LLM duplicaba al backend y además fallaba.
 
 ---
 
