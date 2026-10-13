@@ -97,12 +97,20 @@ async def test_failed_identity_reveals_nothing_and_locks_after_three(client, ava
     assert locked["verified"] is False and locked["locked"] is True
 
 
-async def test_malformed_identity_is_rejected_by_validation(client, avanza_key, conversation_id):
+async def test_unreadable_identity_asks_again_without_spending_an_attempt(client, avanza_key, conversation_id):
     response = await client.post("/tools/verify-identity", headers=h(avanza_key), json={
-        "conversation_id": conversation_id, "id_last4": "cuatro", "birth_date": "14/05/1990"})
-    assert response.status_code == 422
-    assert response.json()["fields"] == ["birth_date", "id_last4"]
-    assert "cuatro" not in response.text
+        "conversation_id": conversation_id, "id_last4": "9733", "birth_date": "<UNKNOWN>"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["verified"] is False and body["incomplete"] is True and body["locked"] is False
+    assert "birth date" in body["message"] and "cédula" not in body["message"]
+    assert "UNKNOWN" not in response.text
+
+    both = await verify(client, avanza_key, conversation_id, {"id_last4": "cuatro", "birth_date": "14/05/1990"})
+    assert both["incomplete"] is True and "cédula" in both["message"]
+
+    verified = await verify(client, avanza_key, conversation_id, LAURA)
+    assert verified["verified"] is True and verified["attempts_remaining"] == both["attempts_remaining"]
 
 
 async def test_invented_or_foreign_plan_ids_are_rejected(client, avanza_key, conversation_id):

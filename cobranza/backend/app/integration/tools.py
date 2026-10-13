@@ -109,9 +109,18 @@ async def verify_identity(
                 message="Too many failed attempts. Offer a callback with an advisor.",
             )
 
-        matches = await conn.fetch(
-            "select * from cobranza.match_identity($1, $2)", body.id_last4, body.birth_date
-        )
+        last4, born = body.parsed()
+        unreadable = [label for value, label in ((last4, "the last four digits of the cédula"),
+                                                 (born, "the birth date with day, month and year")) if value is None]
+        if unreadable:
+            await audit(tenant.id, body.conversation_id, "verify_identity", "incomplete",
+                        {"unreadable": len(unreadable)}, conn=conn)
+            return VerifyIdentityResponse(
+                verified=False, session_token="", attempts_remaining=max_attempts - failures, incomplete=True,
+                message=f"Missing or unreadable: {' and '.join(unreadable)}. Ask the customer again for it.",
+            )
+
+        matches = await conn.fetch("select * from cobranza.match_identity($1, $2)", last4, born)
         if len(matches) != 1:
             await audit(tenant.id, body.conversation_id, "verify_identity", "not_verified",
                         {"ambiguous": len(matches) > 1}, conn=conn)

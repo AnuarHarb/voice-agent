@@ -1,9 +1,10 @@
 """Tool contracts. Every field the LLM fills is validated here; nothing is trusted as-is."""
 
+import re
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 ConversationId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 SessionToken = Annotated[str, StringConstraints(strip_whitespace=True, min_length=20, max_length=200)]
@@ -15,16 +16,23 @@ class ToolRequest(BaseModel):
     conversation_id: ConversationId
 
 
-class VerifyIdentityRequest(ToolRequest):
-    id_last4: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
-    birth_date: date
+RawAnswer = Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)]
 
-    @field_validator("birth_date")
-    @classmethod
-    def plausible_birth_date(cls, value: date) -> date:
-        if not date(1900, 1, 1) <= value <= date.today():
-            raise ValueError("birth_date out of range")
-        return value
+
+class VerifyIdentityRequest(ToolRequest):
+    # Raw strings, parsed by the endpoint: an unreadable answer must lead to asking again, not to a tool error.
+    id_last4: RawAnswer
+    birth_date: RawAnswer
+
+    def parsed(self) -> tuple[str | None, date | None]:
+        last4 = self.id_last4 if re.fullmatch(r"\d{4}", self.id_last4) else None
+        try:
+            born = date.fromisoformat(self.birth_date)
+        except ValueError:
+            born = None
+        if born and not date(1900, 1, 1) <= born <= date.today():
+            born = None
+        return last4, born
 
 
 class SessionRequest(ToolRequest):
@@ -61,6 +69,7 @@ class VerifyIdentityResponse(BaseModel):
     customer_first_name: str = ""
     attempts_remaining: int
     locked: bool = False
+    incomplete: bool = False
     message: str
 
 

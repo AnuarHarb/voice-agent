@@ -11,6 +11,7 @@
         "dynamic_variable_placeholders": {
           "tenant_id": "${tenant_id}",
           "identity_verified": "false",
+          "identity_incomplete": "false",
           "${session_var}": "",
           "customer_first_name": "",
           "plan_ref": ""

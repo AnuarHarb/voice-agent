@@ -1,11 +1,11 @@
 {
   "verified": {
     "verified": true, "session_token": "st_mock_session_token_for_tests_0001",
-    "customer_first_name": "Laura", "attempts_remaining": 3, "locked": false, "message": "Identity verified."
+    "customer_first_name": "Laura", "attempts_remaining": 3, "locked": false, "incomplete": false, "message": "Identity verified."
   },
   "not_verified": {
     "verified": false, "session_token": "", "customer_first_name": "", "attempts_remaining": 2,
-    "locked": false, "message": "The data does not match. Do not reveal whether an account exists."
+    "locked": false, "incomplete": false, "message": "The data does not match. Do not reveal whether an account exists."
   },
   "summary": {
     "account": "terminada en 4417", "account_last4": "4417", "product": "Crédito de consumo",
