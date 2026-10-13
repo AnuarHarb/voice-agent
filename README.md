@@ -11,7 +11,7 @@ An ElevenLabs voice agent that handles early-stage collections for a Colombian f
 | Backend (integration) | https://voice-agent-production-64b9.up.railway.app/health |
 | Example Conversation ID | `conv_0701m4rpy0bpf5p8169kkpce77qk` |
 
-This document explains **how the system is split and why**. For setup, deployment and operations, see [`cobranza/README.md`](cobranza/README.md). The agent speaks Colombian Spanish, and so does the console, because it plays the fintech's own back office.
+This document explains **how the system is split and why**. For setup, deployment and operations, see [`cobranza/README.md`](cobranza/README.md). The agent speaks Colombian Spanish and switches to English if the customer does. The console has a Spanish/English switch in its header.
 
 ---
 
