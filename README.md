@@ -165,7 +165,6 @@ sequenceDiagram
 ## Repo map
 
 ```
-specs                      the original take-home spec
 cobranza/
   README.md                setup, deployment and operations
   agent_configs/  prompts/  tool_configs/  procedure_configs/  knowledge_base/  test_configs/
