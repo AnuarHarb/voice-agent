@@ -20,10 +20,10 @@ export function Layout() {
     if (pathname !== '/consola') document.title = 'Inmercity / Agents'
   }, [pathname])
   const links = [
+    { to: '/', label: { es: 'Probar', en: 'Try it' }, end: true },
     { to: '/casos', label: { es: 'Casos de uso', en: 'Use cases' } },
     { to: '/como-funciona', label: { es: 'Cómo funciona', en: 'How it works' } },
     { to: '/integracion', label: { es: 'Integración', en: 'Integration' } },
-    { to: '/consola', label: { es: 'Detrás de cámaras', en: 'Behind the scenes' } },
   ]
   return (
     <div className="site">
@@ -33,12 +33,11 @@ export function Layout() {
         <nav aria-label={l({ es: 'Principal', en: 'Main' })}>
           <ul role="list">
             {links.map((x) => (
-              <li key={x.to}><NavLink to={x.to}>{l(x.label)}</NavLink></li>
+              <li key={x.to}><NavLink to={x.to} end={x.end}>{l(x.label)}</NavLink></li>
             ))}
           </ul>
         </nav>
         <div className="site-tools">
-          <Link className="btn btn-quiet" to="/presentacion">{l({ es: 'Presentar', en: 'Present' })}</Link>
           <LanguageSwitch />
         </div>
       </header>
@@ -48,6 +47,12 @@ export function Layout() {
       <footer className="site-footer">
         <p className="mono-label">Inmercity / Agents</p>
         <p>Inmercity Labs. Building Intelligence.</p>
+        <nav aria-label={l({ es: 'Secundaria', en: 'Secondary' })}>
+          <ul role="list" className="footer-links">
+            <li><Link to="/consola">{l({ es: 'Detrás de cámaras', en: 'Behind the scenes' })}</Link></li>
+            <li><Link to="/presentacion">{l({ es: 'Presentar', en: 'Present' })}</Link></li>
+          </ul>
+        </nav>
         <p className="muted">{l({
           es: 'Los demos usan nombres, cuentas y datos ficticios. Los casos marcados como concepto aún no están en producción.',
           en: 'Demos use fictional names, accounts and data. Cases marked as concept are not in production yet.',

@@ -117,6 +117,7 @@ const es = {
   transcriptLabel: (agent: string) => `Transcripción con ${agent}`,
   transcriptLive: (agent: string) => `Saluda a ${agent}; lo que digan los dos aparece aquí.`,
   transcriptIdle: 'La transcripción aparece aquí durante la llamada. Para llamar como un cliente, usa el botón de su tarjeta.',
+  transcriptIdleShort: 'La transcripción aparece aquí durante la llamada. Presiona Llamar y di los datos de la derecha.',
   scrollLatest: 'Ir al último mensaje',
   micDenied: 'Sin acceso al micrófono. Permítelo en el navegador para llamar.',
 
@@ -307,6 +308,7 @@ const en: Messages = {
   transcriptLabel: (agent) => `Transcript with ${agent}`,
   transcriptLive: (agent) => `Say hello to ${agent}; what you both say shows up here.`,
   transcriptIdle: "The transcript shows up here during the call. To call as a customer, use the button on their card.",
+  transcriptIdleShort: "The transcript shows up here during the call. Press Call and say the details on the right.",
   scrollLatest: 'Go to the latest message',
   micDenied: 'No microphone access. Allow it in the browser to call.',
 

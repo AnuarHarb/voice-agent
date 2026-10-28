@@ -173,3 +173,23 @@ pre.code {
   .script li { grid-template-columns: 1fr; gap: 0; }
   .deck-top, .deck-bottom, .deck-slide { padding-left: var(--space-6); padding-right: var(--space-6); }
 }
+
+/* Home: one-screen demo */
+.hero.compact { padding-top: var(--space-10); gap: var(--space-3); }
+.quick { display: grid; gap: var(--space-6); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); border: 0; padding: 0; margin: 0; }
+.chips legend { padding: 0 0 var(--space-2); }
+.chip { display: grid; gap: 2px; padding: var(--space-2) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); cursor: pointer; background: var(--surface); }
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chip span { font-size: 0.8em; color: var(--muted, inherit); opacity: 0.75; }
+.chip.on { border-color: var(--electric-iris); background: var(--surface-raised); }
+.chip.off { opacity: 0.5; cursor: not-allowed; }
+.chip:focus-within { outline: 2px solid var(--electric-iris); outline-offset: 2px; }
+.say { display: grid; gap: var(--space-3); padding: var(--space-4); }
+.say .field { display: grid; gap: 4px; }
+.say .data { display: grid; gap: var(--space-2); }
+.say .data div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.say .data dd { font-family: var(--font-mono, monospace); font-weight: 600; }
+.btn.call { justify-content: center; font-size: 1.1em; padding-block: var(--space-4); }
+.footer-links { display: flex; gap: var(--space-4); }
+[hidden] { display: none !important; }

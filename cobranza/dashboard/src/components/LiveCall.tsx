@@ -23,14 +23,14 @@ function StatusLine({ call, agentName }: { call: Call; agentName: string }) {
   return <p>{call.agentState === 'talking' ? t.talking(agentName) : t.listening(agentName)}</p>
 }
 
-export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: string; agentName: string }) {
+export function LiveCall({ call, tenant, agentName, embedded = false }: { call: Call; tenant: string; agentName: string; embedded?: boolean }) {
   const { t, f } = useI18n()
   const live = call.status === 'connected' || call.status === 'connecting'
   const colors = ORB_COLORS[tenant] ?? ORB_COLORS.avanza
 
   return (
     <section className="block live" id="en-vivo" aria-labelledby="en-vivo-titulo">
-      <header className="block-head">
+      <header className="block-head" hidden={embedded}>
         <h2 id="en-vivo-titulo">{t.liveTitle}</h2>
         <p>{t.liveIntro(agentName)}</p>
       </header>
@@ -80,7 +80,7 @@ export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: stri
                   {call.isMuted ? t.unmute : t.mute}
                 </button>
               </>
-            ) : (
+            ) : embedded ? null : (
               <button type="button" className="call" onClick={() => call.start()}>
                 <PhoneIcon aria-hidden="true" /> {t.callAgent(agentName)}
               </button>
@@ -91,7 +91,7 @@ export function LiveCall({ call, tenant, agentName }: { call: Call; tenant: stri
         <Conversation className="transcript" aria-label={t.transcriptLabel(agentName)}>
           <ConversationContent className="transcript-content">
             {call.lines.length === 0 ? (
-              <p className="transcript-empty">{live ? t.transcriptLive(agentName) : t.transcriptIdle}</p>
+              <p className="transcript-empty">{live ? t.transcriptLive(agentName) : embedded ? t.transcriptIdleShort : t.transcriptIdle}</p>
             ) : (
               call.lines.map((line) =>
                 line.kind === 'tool' ? (
