@@ -1,0 +1,228 @@
+{
+  "name": "${agent_display_name}",
+  "tags": [
+    "demo",
+    "${agent_label}",
+    "${tenant_id}"
+  ],
+  "conversation_config": {
+    "agent": {
+      "first_message": "${first_message_es}",
+      "language": "es",
+      "disable_first_message_interruptions": true,
+      "max_conversation_duration_message": "Ya llegamos al tiempo máximo de esta llamada. Si necesitas algo más, puedes volver a llamarnos. Gracias.",
+      "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+          "tenant_id": "${tenant_id}",
+          "identity_verified": "false",
+          "identity_incomplete": "false",
+          "${session_var}": "",
+          "customer_first_name": ""
+        }
+      },
+      "prompt": {
+        "prompt": "${file:prompts/vertical_prompt.md}",
+        "llm": "${llm}",
+        "backup_llm_config": {
+          "preference": "override",
+          "order": [
+            "gpt-5.6-luna",
+            "gemini-3.5-flash"
+          ]
+        },
+        "cascade_timeout_seconds": 5,
+        "temperature": 0.0,
+        "timezone": "America/Bogota",
+        "ignore_default_personality": true,
+        "enable_parallel_tool_calls": false,
+        "tool_ids": "${tool_ids}",
+        "knowledge_base": "${knowledge_base}",
+        "built_in_tools": {
+          "end_call": {
+            "type": "system",
+            "name": "end_call",
+            "description": "",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          },
+          "language_detection": {
+            "type": "system",
+            "name": "language_detection",
+            "description": "",
+            "params": {
+              "system_tool_type": "language_detection"
+            }
+          }
+        }
+      }
+    },
+    "language_presets": {
+      "en": {
+        "overrides": {
+          "agent": {
+            "first_message": "${first_message_en}",
+            "language": "en"
+          }
+        }
+      }
+    },
+    "tts": {
+      "model_id": "eleven_v4_turbo",
+      "voice_id": "${voice_id}",
+      "expressive_mode": true,
+      "stability": 0.55,
+      "similarity_boost": 0.75,
+      "speed": 1.0,
+      "text_normalisation_type": "elevenlabs"
+    },
+    "asr": {
+      "quality": "high",
+      "provider": "scribe_realtime",
+      "keywords": "${asr_keywords}"
+    },
+    "turn": {
+      "turn_timeout": 8,
+      "spelling_patience": "auto",
+      "speculative_turn": true,
+      "interruption_ignore_terms": [
+        "ajá",
+        "aja",
+        "mjm",
+        "ajá ajá",
+        "ok",
+        "okey",
+        "ya",
+        "claro",
+        "uh huh",
+        "mm-hmm"
+      ],
+      "soft_timeout_config": {
+        "timeout_seconds": 2.5,
+        "use_llm_generated_message": true,
+        "llm_generated_message_prompt_override": "Write a filler of two to four words that tells the customer you are still there, in the language the customer is speaking, calm and natural, for example 'Mmm, déjame ver.' or 'Un momento.' Never mention amounts, dates or account details.",
+        "message": "Mmm, déjame ver.",
+        "max_soft_timeouts_per_generation": 1,
+        "disable_until_first_user_message": true
+      }
+    },
+    "conversation": {
+      "max_duration_seconds": 360,
+      "background_sound": {
+        "source_type": "preset",
+        "source_id": "office1",
+        "volume": 0.08,
+        "crossfade_loop": true
+      },
+      "client_events": [
+        "audio",
+        "interruption",
+        "user_transcript",
+        "agent_response",
+        "agent_response_correction",
+        "agent_tool_request",
+        "agent_tool_response"
+      ]
+    }
+  },
+  "platform_settings": {
+    "trust_context": "low",
+    "analysis_llm": "gemini-2.5-flash",
+    "summary_language": "es",
+    "auth": {
+      "enable_auth": false,
+      "allowlist": []
+    },
+    "overrides": {
+      "conversation_config_override": {
+        "agent": {
+          "language": true
+        },
+        "conversation": {
+          "text_only": true
+        }
+      }
+    },
+    "privacy": {
+      "record_voice": true,
+      "retention_days": 90,
+      "delete_transcript_and_pii": false,
+      "delete_audio": false,
+      "zero_retention_mode": false
+    },
+    "guardrails": {
+      "version": "1",
+      "focus": {
+        "is_enabled": true
+      },
+      "prompt_injection": {
+        "is_enabled": true
+      },
+      "custom": {
+        "config": {
+          "configs": [
+            {
+              "is_enabled": true,
+              "name": "Sin excepciones inventadas",
+              "prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
+              "execution_mode": "streaming",
+              "model": "claude-haiku-4-5",
+              "history_message_count": 2,
+              "trigger_action": {
+                "type": "end_call"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "data_collection": {
+      "outcome": {
+        "type": "string",
+        "enum": "${outcome_enum}",
+        "description": "${outcome_description}"
+      },
+      "language": {
+        "type": "string",
+        "enum": [
+          "es",
+          "en"
+        ],
+        "description": "Main language the customer used during the call."
+      },
+      "customer_sentiment": {
+        "type": "string",
+        "enum": [
+          "positivo",
+          "neutral",
+          "negativo"
+        ],
+        "description": "Overall sentiment the customer showed during the call."
+      }
+    },
+    "evaluation": {
+      "criteria": "${criteria}"
+    },
+    "workspace_overrides": {
+      "webhooks": {
+        "post_call_webhook_id": "${post_call_webhook_id}",
+        "events": [
+          "transcript"
+        ]
+      }
+    },
+    "testing": {
+      "attached_tests": "${attached_tests}"
+    },
+    "widget": {
+      "variant": "full",
+      "transcript_enabled": true,
+      "text_input_enabled": true,
+      "supports_text_only": true,
+      "language_selector": true,
+      "feedback_mode": "end",
+      "show_agent_status": true,
+      "show_conversation_id": true
+    }
+  }
+}

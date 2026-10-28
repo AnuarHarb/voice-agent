@@ -18,7 +18,16 @@ export type UseCase = {
   guardrails: L10nList
   metric: L10n
   /** Label of the ElevenLabs agent in tenant_agents. Present only when a live demo exists. */
-  demo?: { agentLabel: string; tenant: string; productCode: string; agentName: string }
+  demo?: {
+    agentLabel: string
+    tenant: string
+    productCode: string
+    agentName: string
+    /** Fictional customers of the vertical demos the visitor can identify as, with what to ask for. */
+    callers?: { id: string; hint: L10n }[]
+    /** Shown when the agent needs no identity (leads). */
+    guide?: L10n
+  }
   script: ScriptLine[]
 }
 
@@ -247,12 +256,13 @@ export const useCases: UseCase[] = [
       es: ['Confirma identidad del paciente.', 'Consulta disponibilidad del especialista.', 'Agenda, reprograma o cancela.', 'Envía el recordatorio por mensaje.'],
       en: ['Confirms patient identity.', "Checks the specialist's availability.", 'Books, reschedules or cancels.', 'Sends a message reminder.'],
     },
-    tools: ['verify_patient', 'get_availability', 'book_appointment', 'cancel_appointment', 'send_reminder'],
+    tools: ['verify_customer', 'get_my_appointment', 'list_availability', 'book_appointment', 'cancel_appointment', 'send_reminder'],
     guardrails: {
       es: ['No da información clínica por voz.', 'Síntomas urgentes pasan a una persona de inmediato.'],
       en: ['Gives no clinical information by voice.', 'Urgent symptoms go to a person immediately.'],
     },
     metric: { es: 'Inasistencias evitadas', en: 'No-shows avoided' },
+    demo: { agentLabel: 'salud_citas', tenant: 'demos', productCode: '', agentName: 'Camila', callers: [{ id: 'cus_dem_mariana', hint: { es: 'Tiene una cita de cardiología. Pide moverla o cancelarla.', en: 'Has a cardiology appointment. Ask to move or cancel it.' } }, { id: 'cus_dem_julian', hint: { es: 'Sin citas. Pide una de medicina general.', en: 'No appointments. Ask for a general medicine slot.' } }] },
     script: [
       { kind: 'user', text: { es: 'Necesito mover mi cita del jueves.', en: 'I need to move my Thursday appointment.' } },
       { kind: 'tool', name: 'get_availability', result: { es: 'Dos espacios el viernes', en: 'Two slots on Friday' } },
@@ -271,12 +281,13 @@ export const useCases: UseCase[] = [
       es: ['Identifica al cliente por número de pedido y un dato de verificación.', 'Informa el estado del envío.', 'Abre la devolución si cumple la política.', 'Envía la guía por mensaje.'],
       en: ['Identifies the customer by order number and a verification detail.', 'Reports shipping status.', 'Opens the return if it meets policy.', 'Sends the label by message.'],
     },
-    tools: ['lookup_order', 'get_tracking', 'open_return', 'send_label'],
+    tools: ['verify_customer', 'get_order_status', 'start_return'],
     guardrails: {
       es: ['La política de devolución la aplica el código.', 'Reembolsos fuera de política pasan a una persona.'],
       en: ['Code applies the return policy.', 'Out-of-policy refunds go to a person.'],
     },
     metric: { es: 'Consultas resueltas sin agente humano', en: 'Queries resolved without a human agent' },
+    demo: { agentLabel: 'retail_pedidos', tenant: 'demos', productCode: '', agentName: 'Daniela', callers: [{ id: 'cus_dem_santiago', hint: { es: 'Pedido MN-10482 en camino y un pedido entregado hace 3 días: prueba estado y devolución.', en: 'Order MN-10482 on its way and one delivered 3 days ago: try status and return.' } }, { id: 'cus_dem_hernan', hint: { es: 'Pedido MN-10110 entregado hace 45 días: la devolución será rechazada por política.', en: 'Order MN-10110 delivered 45 days ago: the return will be refused by policy.' } }] },
     script: [
       { kind: 'tool', name: 'get_tracking', result: { es: 'En reparto, llega hoy', en: 'Out for delivery, arrives today' } },
       { kind: 'agent', text: { es: 'Tu pedido salió a reparto esta mañana y llega hoy antes de las 6.', en: 'Your order went out for delivery this morning and arrives today before 6.' } },
@@ -294,12 +305,13 @@ export const useCases: UseCase[] = [
       es: ['Verifica consentimiento comercial.', 'Pregunta si hubo un problema con el pago.', 'Resuelve la duda o envía el link de pago.', 'Un "no" cierra el contacto.'],
       en: ['Checks commercial consent.', 'Asks if something went wrong at checkout.', 'Answers the question or sends the payment link.', 'A "no" ends the contact.'],
     },
-    tools: ['get_cart', 'send_checkout_link', 'register_opt_out'],
+    tools: ['verify_customer', 'get_cart', 'send_checkout_link'],
     guardrails: {
       es: ['Solo llama a quien dio consentimiento.', 'Una sola oferta por llamada.'],
       en: ['Only calls people who gave consent.', 'One offer per call.'],
     },
     metric: { es: 'Carritos recuperados', en: 'Carts recovered' },
+    demo: { agentLabel: 'retail_carritos', tenant: 'demos', productCode: '', agentName: 'Andrea', callers: [{ id: 'cus_dem_valeria', hint: { es: 'Tiene un carrito y dio consentimiento: acepta el link.', en: 'Has a cart and gave consent: accept the link.' } }, { id: 'cus_dem_hernan', hint: { es: 'Tiene un carrito pero no dio consentimiento: no se envía nada.', en: 'Has a cart but no consent: nothing is sent.' } }] },
     script: [
       { kind: 'agent', text: { es: 'Dejaste unos zapatos en tu carrito. ¿Tuviste algún problema para pagar?', en: 'You left a pair of shoes in your cart. Did you have trouble at checkout?' } },
     ],
@@ -316,12 +328,13 @@ export const useCases: UseCase[] = [
       es: ['Identifica la línea o el servicio.', 'Revisa fallas masivas conocidas.', 'Guía el diagnóstico paso a paso.', 'Si no se resuelve, crea el ticket y transfiere con contexto.'],
       en: ['Identifies the line or service.', 'Checks known outages.', 'Walks through diagnosis step by step.', 'If unresolved, opens a ticket and transfers with context.'],
     },
-    tools: ['lookup_service', 'check_outage', 'run_diagnostic', 'create_ticket'],
+    tools: ['verify_customer', 'check_outage', 'run_diagnostic', 'open_ticket'],
     guardrails: {
       es: ['Cambios de plan o cobros pasan a una persona.', 'La transferencia incluye el resumen para no repetir la historia.'],
       en: ['Plan changes or charges go to a person.', 'The transfer includes a summary so the customer does not repeat the story.'],
     },
     metric: { es: 'Resolución en primer contacto', en: 'First-contact resolution' },
+    demo: { agentLabel: 'telco_soporte', tenant: 'demos', productCode: '', agentName: 'Susana', callers: [{ id: 'cus_dem_camilo', hint: { es: 'Vive en Belén, con falla masiva: informa y no abre ticket.', en: 'Lives in Belén, with an area outage: informs and opens no ticket.' } }, { id: 'cus_dem_natalia', hint: { es: 'Sin falla en la zona y módem sin respuesta: abre ticket.', en: 'No area outage and an unresponsive modem: opens a ticket.' } }] },
     script: [
       { kind: 'tool', name: 'check_outage', result: { es: 'Sin falla en la zona', en: 'No outage in the area' } },
       { kind: 'tool', name: 'run_diagnostic', result: { es: 'Módem sin respuesta, reinicio remoto', en: 'Modem unresponsive, remote restart' } },
@@ -339,12 +352,13 @@ export const useCases: UseCase[] = [
       es: ['Escucha el motivo.', 'Consulta las ofertas de retención vigentes.', 'Presenta una opción, no una lista.', 'Si el cliente insiste, procesa la cancelación sin trabas.'],
       en: ['Listens to the reason.', 'Looks up current retention offers.', 'Presents one option, not a list.', 'If the customer insists, processes the cancellation with no friction.'],
     },
-    tools: ['lookup_service', 'get_retention_offer', 'apply_offer', 'process_cancellation'],
+    tools: ['verify_customer', 'get_retention_offer', 'accept_retention_offer', 'confirm_cancellation'],
     guardrails: {
       es: ['Nunca bloquea una cancelación solicitada.', 'Las ofertas salen de un catálogo, no se inventan.'],
       en: ['Never blocks a requested cancellation.', 'Offers come from a catalog, never invented.'],
     },
     metric: { es: 'Clientes retenidos', en: 'Customers retained' },
+    demo: { agentLabel: 'telco_retencion', tenant: 'demos', productCode: '', agentName: 'Marcela', callers: [{ id: 'cus_dem_natalia', hint: { es: 'Quiere cancelar por precio: recibe 20 % por 6 meses.', en: 'Wants to cancel over price: gets 20% for 6 months.' } }, { id: 'cus_dem_esteban', hint: { es: 'Se muda del país: rechaza la oferta y cancela.', en: 'Moving abroad: rejects the offer and cancels.' } }] },
     script: [
       { kind: 'user', text: { es: 'Quiero cancelar, está muy caro.', en: 'I want to cancel, it is too expensive.' } },
       { kind: 'tool', name: 'get_retention_offer', result: { es: '20 % por 6 meses', en: '20% off for 6 months' } },
@@ -362,12 +376,13 @@ export const useCases: UseCase[] = [
       es: ['Llama al lead entrante en minutos.', 'Califica presupuesto, zona y plazo.', 'Agenda una visita o llamada con un asesor.', 'Entrega el resumen al CRM.'],
       en: ['Calls the inbound lead within minutes.', 'Qualifies budget, area and timeline.', 'Books a visit or call with an advisor.', 'Writes the summary to the CRM.'],
     },
-    tools: ['get_lead', 'score_lead', 'book_advisor', 'update_crm'],
+    tools: ['search_properties', 'save_lead', 'list_advisor_slots', 'book_advisor'],
     guardrails: {
       es: ['No promete precios ni disponibilidad que no estén en el inventario.', 'El asesor humano cierra la venta.'],
       en: ['Never promises prices or availability that are not in inventory.', 'The human advisor closes the sale.'],
     },
     metric: { es: 'Leads calificados con cita', en: 'Qualified leads with a booked meeting' },
+    demo: { agentLabel: 'inmo_leads', tenant: 'demos', productCode: '', agentName: 'Juliana', guide: { es: 'No necesitas datos: di que buscas un apartamento en Chapinero, de 2 habitaciones, para comprar, con presupuesto de 600 millones y que decides ya.', en: 'No details needed: say you want a 2-bedroom apartment in Chapinero to buy, with a 600 million budget, deciding now.' } },
     script: [
       { kind: 'agent', text: { es: 'Vi tu interés en apartamentos en Chapinero. ¿Qué presupuesto manejas?', en: 'I saw your interest in apartments in Chapinero. What budget are you working with?' } },
     ],

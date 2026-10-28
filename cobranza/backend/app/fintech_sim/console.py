@@ -49,6 +49,17 @@ async def tenants() -> list[dict]:
     return listed
 
 
+@router.get("/{tenant_id}/demo-customers")
+async def demo_customers(tenant_id: str) -> list[dict]:
+    """Fictional customers of the vertical demos (salud, retail, telco), with the data they must say to verify."""
+    async with console_tx(tenant_id) as conn:
+        return await _rows(conn, """
+            select c.id, c.vertical, v.full_name, v.national_id, v.birth_date
+            from cobranza.vertical_customers c
+            join cobranza.pii_vault v on v.person_token = c.person_token
+            order by c.vertical, v.full_name""")
+
+
 @router.get("/{tenant_id}/overview")
 async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
     async with console_tx() as conn:

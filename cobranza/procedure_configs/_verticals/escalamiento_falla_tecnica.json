@@ -1,0 +1,48 @@
+{
+  "name": "Escalamiento por falla técnica",
+  "type": "deterministic",
+  "trigger": "Only when a retry procedure hands off here because a tool failed twice in a row. Never start it from a customer request.",
+  "steps": [
+    {
+      "type": "tool_call",
+      "tool": "handoff_to_human",
+      "schema_overrides": {
+        "request_body.reason": {
+          "source": "constant",
+          "constant_value": "Falla técnica: una herramienta no respondió dos veces durante la llamada."
+        }
+      },
+      "on_failure": {
+        "branches": [],
+        "fallback": [
+          {
+            "type": "say",
+            "message": "Sigo teniendo una falla técnica, así que no voy a adivinar ningún dato de tu cuenta. Por favor vuelve a llamarnos más tarde. Disculpa las molestias.",
+            "message_translations": {
+              "en": {
+                "value": "I'm still having a technical problem, so I won't guess any of your account details. Please call us again later. Sorry for the inconvenience."
+              }
+            }
+          },
+          {
+            "type": "system_tool",
+            "system_tool_name": "end_call"
+          }
+        ]
+      }
+    },
+    {
+      "type": "say",
+      "message": "No pude completar la consulta por una falla técnica. Dejé registrado que una persona de ${tenant_name} te contacte. Disculpa las molestias.",
+      "message_translations": {
+        "en": {
+          "value": "I couldn't complete the request because of a technical problem. I've asked a ${tenant_name} person to contact you. Sorry for the inconvenience."
+        }
+      }
+    },
+    {
+      "type": "system_tool",
+      "system_tool_name": "end_call"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "01 Camino ideal: busca, califica y agenda visita",
+  "type": "simulation",
+  "simulation_scenario": "Eres Ana Prueba, buscas un apartamento de dos habitaciones en Chapinero para comprar, con presupuesto de seiscientos millones, y piensas decidir de inmediato. Das tu nombre cuando te lo pidan. Aceptas el primer horario de visita. Respondes corto, en español.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "search_properties": "properties",
+    "save_lead": "lead_alto",
+    "list_advisor_slots": "advisor_slots",
+    "book_advisor": "advisor_booked",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent presented at most two properties with the data returned by search_properties.",
+    "The agent called save_lead before listing advisor slots and booked the visit with book_advisor.",
+    "The agent never asked for a cédula number or financial documents."
+  ]
+}

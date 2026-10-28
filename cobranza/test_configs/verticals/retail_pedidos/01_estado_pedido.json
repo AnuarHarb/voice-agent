@@ -1,0 +1,16 @@
+{
+  "name": "01 Estado del pedido: verifica y responde con datos reales",
+  "type": "simulation",
+  "simulation_scenario": "Eres Santiago Beltrán, cliente de ${tenant_name}. Quieres saber dónde está tu pedido MN-10482. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son dos dos nueve cero y que naciste el veintiuno de junio de mil novecientos noventa y cuatro. Respondes corto, en español.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_order_status": "orders",
+    "start_return": "return_ok",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent verified identity before sharing order information.",
+    "The agent said the order is on its way using the status and date returned by get_order_status."
+  ]
+}

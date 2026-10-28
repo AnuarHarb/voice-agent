@@ -42,7 +42,8 @@ export default function Console() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.tenants().then(setTenants, (e: Error) => setError(e.message))
+    // The demos tenant has no collections data: its agents are exercised from /demo.
+    api.tenants().then((list) => setTenants(list.filter((t) => t.id !== 'demos')), (e: Error) => setError(e.message))
   }, [])
 
   const load = useCallback(

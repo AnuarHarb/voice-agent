@@ -1,0 +1,32 @@
+{
+  "type": "webhook",
+  "name": "list_advisor_slots",
+  "description": "Lists the next free slots to visit with a human advisor. Present at most two.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/inmo/advisor-slots",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "conversation_id"
+      ],
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

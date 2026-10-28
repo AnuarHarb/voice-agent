@@ -1,0 +1,41 @@
+{
+  "type": "webhook",
+  "name": "list_availability",
+  "description": "Lists the next free appointment slots, optionally for one specialty such as medicina general, cardiología or dermatología. Returns slot_id and a spoken date for each. Present at most two.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/salud/availability",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "session_token",
+        "conversation_id"
+      ],
+      "properties": {
+        "specialty": {
+          "type": "string",
+          "description": "Specialty the customer wants, in Spanish, lowercase. Leave empty if they did not say."
+        },
+        "session_token": {
+          "type": "string",
+          "dynamic_variable": "${session_var}"
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

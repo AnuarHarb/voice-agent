@@ -1,0 +1,60 @@
+{
+  "type": "webhook",
+  "name": "save_lead",
+  "description": "Saves the prospect's profile and returns a score. Call once you know their name, timeline and, if they shared it, budget. Never ask for the cédula or financial documents.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/inmo/lead",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "name",
+        "timeline",
+        "conversation_id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Prospect's first name and last name."
+        },
+        "zone": {
+          "type": "string",
+          "description": "Zone of interest. Empty if not said."
+        },
+        "budget": {
+          "type": "integer",
+          "description": "Budget in Colombian pesos as a plain number. 0 if they did not share it."
+        },
+        "bedrooms": {
+          "type": "integer",
+          "description": "Bedrooms wanted. 0 if not said."
+        },
+        "timeline": {
+          "type": "string",
+          "enum": [
+            "inmediato",
+            "1-3 meses",
+            "3-6 meses",
+            "explorando"
+          ],
+          "description": "When they plan to decide."
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

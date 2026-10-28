@@ -38,7 +38,15 @@ CASES = [
     "microcredito",
     "oferta_cupo",
 ]
-TENANTS = CASES + ["nexo"]
+VERTICALS = [
+    "salud_citas",
+    "retail_pedidos",
+    "retail_carritos",
+    "telco_soporte",
+    "telco_retencion",
+    "inmo_leads",
+]
+TENANTS = CASES + ["nexo"] + VERTICALS
 COLLECTION_TOOLS = [
     "verify_identity",
     "get_account_summary",
@@ -168,10 +176,10 @@ def _expand(steps: list, extra_procs: dict) -> list:
     return out
 
 
-def load_procedures(case_key: str | None = None) -> dict:
+def load_procedures(case_key: str | None = None, shared_dir: str = "_shared") -> dict:
     procs, extra = {}, {}
     paths: list[Path] = []
-    shared = ROOT / "procedure_configs" / "_shared"
+    shared = ROOT / "procedure_configs" / shared_dir
     if shared.is_dir():
         paths.extend(sorted(shared.glob("*.json")))
     if case_key:
@@ -188,9 +196,10 @@ def load_procedures(case_key: str | None = None) -> dict:
 
 
 def agent_config_path(tenant: str) -> Path:
-    case = ROOT / "agent_configs" / "cases" / f"{tenant}.json"
-    if case.exists():
-        return case
+    for folder in ("cases", "verticals"):
+        found = ROOT / "agent_configs" / folder / f"{tenant}.json"
+        if found.exists():
+            return found
     legacy = ROOT / "agent_configs" / f"{tenant}.json"
     if legacy.exists():
         return legacy
@@ -306,23 +315,42 @@ def test_payload(spec: dict, ctx: dict, mocks: dict) -> dict:
 
 # ---------------------------------------------------------------------- build
 
+def tool_names_for(tenant: str, cfg: dict) -> list[str]:
+    if cfg.get("tools"):
+        return cfg["tools"]
+    return COMMERCIAL_TOOLS if tenant == "oferta_cupo" else COLLECTION_TOOLS
+
+
+def procedures_for(tenant: str, cfg: dict) -> dict:
+    """Procedures an agent gets: the shared set plus its own folder, narrowed by the config's allow list."""
+    if tenant in VERTICALS:
+        procs = load_procedures(cfg.get("procedure_dir", f"verticals/{tenant}"), shared_dir="_verticals")
+    else:
+        procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
+    if allowed := cfg.get("procedures"):
+        allowed_set, tools = set(allowed), set(tool_names_for(tenant, cfg))
+        procs = {
+            k: v for k, v in procs.items()
+            if k in allowed_set or (k.startswith("reintento_") and k.removeprefix("reintento_") in tools)
+        }
+    elif tenant in VERTICALS:
+        # Retry procedures only for tools this agent has.
+        tools = set(tool_names_for(tenant, cfg))
+        procs = {k: v for k, v in procs.items() if not k.startswith("reintento_") or k.removeprefix("reintento_") in tools}
+    return procs
+
+
+def kb_paths(cfg: dict) -> list[Path]:
+    if cfg.get("kb_files"):
+        return [ROOT / "knowledge_base" / f"{name}.md" for name in cfg["kb_files"]]
+    return sorted((ROOT / "knowledge_base").glob("*.md"))
+
+
 def tenant_context(tenant: str, state: dict, offline: bool) -> dict:
     cfg = read_json(agent_config_path(tenant))
     tstate = state.get("tenants", {}).get(tenant, {})
-    tool_names = cfg.get("tools") or COLLECTION_TOOLS
-    if tenant == "oferta_cupo":
-        tool_names = cfg.get("tools") or COMMERCIAL_TOOLS
-    procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
-    if tenant == "nexo":
-        procs = load_procedures("libre_inversion_mora")
-    if allowed := cfg.get("procedures"):
-        allowed_set = set(allowed)
-        tool_names_set = set(tool_names)
-        procs = {
-            k: v for k, v in procs.items()
-            if k in allowed_set
-            or (k.startswith("reintento_") and k.removeprefix("reintento_") in tool_names_set)
-        }
+    tool_names = tool_names_for(tenant, cfg)
+    procs = procedures_for(tenant, cfg)
 
     def ids(kind, keys):
         saved = tstate.get(kind, {})
@@ -341,7 +369,8 @@ def tenant_context(tenant: str, state: dict, offline: bool) -> dict:
         "tenant_key_secret_id": tstate.get("secret_id") or ("offline_secret" if offline else None),
         "tool_ids": ids("tools", tool_names),
         "procedure_ids": ids("procedures", procs.keys()),
-        "kb_ids": ids("kb", [p.stem for p in (ROOT / "knowledge_base").glob("*.md")]),
+        "kb_ids": ids("kb", [p.stem for p in kb_paths(cfg)]),
+        "kb_paths": [str(p) for p in kb_paths(cfg)],
         "post_call_webhook_id": state.get("post_call_webhook_id"),
     })
     return ctx
@@ -350,14 +379,14 @@ def tenant_context(tenant: str, state: dict, offline: bool) -> dict:
 def kb_documents(ctx: dict) -> dict:
     titles = {"faq": "Preguntas frecuentes", "ley_2300": "Ley 2300 de 2023", "tratamiento_datos": "Tratamiento de datos"}
     return {
-        p.stem: {"name": f"{ctx['tenant_name']} · {titles.get(p.stem, p.stem)}",
+        p.stem: {"name": f"{ctx['tenant_name']} · {titles.get(p.stem, "Preguntas frecuentes")}",
                  "text": render(p.read_text(encoding="utf-8"), ctx)}
-        for p in sorted((ROOT / "knowledge_base").glob("*.md"))
+        for p in map(Path, ctx["kb_paths"])
     }
 
 
 def agent_payload(ctx: dict, state_tenant: dict) -> dict:
-    template = read_json(ROOT / "agent_configs" / "_template.json")
+    template = read_json(ROOT / "agent_configs" / ctx.get("template", "_template.json"))
     kb = [{"type": "text", "name": doc["name"], "id": ctx["kb_ids"][key], "usage_mode": "auto"}
           for key, doc in kb_documents(ctx).items()]
     tests = [{"test_id": tid} for tid in (state_tenant.get("tests") or {}).values() if tid]
@@ -376,18 +405,8 @@ def build_tenant(tenant: str, state: dict, offline: bool) -> dict:
         name: render(read_json(ROOT / "tool_configs" / f"{name}.json"), ctx)
         for name in ctx.get("tools", COLLECTION_TOOLS)
     }
-    procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
-    if tenant == "nexo":
-        procs = load_procedures("libre_inversion_mora")
-    if allowed := cfg.get("procedures"):
-        allowed_set = set(allowed)
-        tool_names_set = set(cfg.get("tools") or (COMMERCIAL_TOOLS if tenant == "oferta_cupo" else COLLECTION_TOOLS))
-        procs = {
-            k: v for k, v in procs.items()
-            if k in allowed_set
-            or (k.startswith("reintento_") and k.removeprefix("reintento_") in tool_names_set)
-        }
-    mocks = read_json(ROOT / "test_configs" / "_mocks.json")
+    procs = procedures_for(tenant, cfg)
+    mocks = read_json(ROOT / "test_configs" / cfg.get("mocks_file", "_mocks.json"))
     test_dir = cfg.get("test_dir", "libre_inversion_mora" if tenant in ("libre_inversion_mora", "nexo") else tenant)
     test_paths = sorted((ROOT / "test_configs" / test_dir).glob("*.json")) if (ROOT / "test_configs" / test_dir).is_dir() else []
     if not test_paths:
@@ -460,6 +479,8 @@ def validate_build(tenant: str, built: dict) -> list[str]:
             errors.append(f"[{tenant}] {name}: {'/'.join(map(str, err.absolute_path))}: {err.message[:300]}")
 
     assigned = {a["dynamic_variable"] for tool in built["tools"].values() for a in tool.get("assignments", [])}
+    # Variables with a placeholder in the agent config are always defined, even if no tool sets them.
+    assigned |= set(built["agent"]["conversation_config"]["agent"]["dynamic_variables"]["dynamic_variable_placeholders"])
     for name, tool in built["tools"].items():
         check(f"tool {name}", "ToolRequestModel", {"tool_config": tool})
         # Placeholders only exist in dashboard tests; a live call has system__ vars and tool assignments.
@@ -574,7 +595,7 @@ def cmd_push(args) -> int:
 
     for tenant in args.tenants:
         tstate = state.setdefault("tenants", {}).setdefault(tenant, {})
-        cfg = read_json(ROOT / "agent_configs" / f"{tenant}.json")
+        cfg = read_json(agent_config_path(tenant))
         tenant_key = ENV.get(cfg["tenant_key_env"])
         if not tenant_key:
             raise SystemExit(f"{cfg['tenant_key_env']} is required")
@@ -592,12 +613,12 @@ def cmd_push(args) -> int:
         ctx = tenant_context(tenant, state, offline=True)
 
         tstate.setdefault("tools", {})
-        for path in sorted((ROOT / "tool_configs").glob("*.json")):
-            tool = render(read_json(path), ctx)
-            if tstate["tools"].get(path.stem):
-                api.call("PATCH", f"/v1/convai/tools/{tstate['tools'][path.stem]}", json={"tool_config": tool})
+        for name in ctx["tools"]:
+            tool = render(read_json(ROOT / "tool_configs" / f"{name}.json"), ctx)
+            if tstate["tools"].get(name):
+                api.call("PATCH", f"/v1/convai/tools/{tstate['tools'][name]}", json={"tool_config": tool})
             else:
-                tstate["tools"][path.stem] = api.call("POST", "/v1/convai/tools", json={"tool_config": tool})["id"]
+                tstate["tools"][name] = api.call("POST", "/v1/convai/tools", json={"tool_config": tool})["id"]
             save_state(state)
         print(f"[{tenant}] tools: {len(tstate['tools'])}")
 
@@ -635,9 +656,7 @@ def cmd_push(args) -> int:
         base = f"/v1/convai/agents/{tstate['agent_id']}/branches/{tstate['branch_id']}/procedures"
 
         tstate.setdefault("procedures", {})
-        procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
-        if tenant == "nexo":
-            procs = load_procedures("libre_inversion_mora")
+        procs = procedures_for(tenant, cfg)
         for key in procedure_order(procs):
             payload = procedure_payload(procs[key], tenant_context(tenant, state, offline=False))
             if tstate["procedures"].get(key):
@@ -651,13 +670,13 @@ def cmd_push(args) -> int:
                  json={"version_description": args.message})
         print(f"[{tenant}] published {tstate['agent_id']}")
         ctx_push = tenant_context(tenant, state, offline=False)
-        register_agent(ctx_push["tenant_id"], ctx_push["agent_label"], tstate["agent_id"])
+        register_agent(tenant, ctx_push["tenant_id"], ctx_push["agent_label"], tstate["agent_id"])
 
     print_links(state)
     return 0
 
 
-def register_agent(tenant_id: str, label: str, agent_id: str) -> None:
+def register_agent(tenant: str, tenant_id: str, label: str, agent_id: str) -> None:
     sql = (f"insert into cobranza.tenant_agents (agent_id, tenant_id, label) values ('{agent_id}', '{tenant_id}', "
            f"'{label}') on conflict (agent_id) do nothing;")
     admin_url = ENV.get("DATABASE_ADMIN_URL")

@@ -1,0 +1,37 @@
+{
+  "type": "webhook",
+  "name": "book_advisor",
+  "description": "Books the advisor visit. Requires save_lead first.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/inmo/book-advisor",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "slot_id",
+        "conversation_id"
+      ],
+      "properties": {
+        "slot_id": {
+          "type": "string",
+          "description": "slot_id exactly as returned by list_advisor_slots."
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "02 Módem sin respuesta: diagnóstico y ticket",
+  "type": "simulation",
+  "simulation_scenario": "Eres Natalia Arboleda, cliente de ${tenant_name}, sin internet. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son siete siete tres uno y que naciste el doce de agosto de mil novecientos noventa y tres. Aceptas la visita técnica cuando te la propongan. Respondes corto, en español.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "check_outage": "outage_none",
+    "run_diagnostic": "diag_bad",
+    "open_ticket": "ticket",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent called check_outage, then run_diagnostic, and only then open_ticket.",
+    "The agent gave the ticket reference and said a technician visits within 48 hours."
+  ]
+}

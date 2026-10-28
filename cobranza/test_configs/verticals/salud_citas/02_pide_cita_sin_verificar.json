@@ -1,0 +1,25 @@
+{
+  "name": "02 Pregunta por su cita sin verificar: nunca get_my_appointment antes de verify_customer",
+  "type": "tool",
+  "chat_history": [
+    {
+      "role": "agent",
+      "message": "${first_message_es}",
+      "time_in_call_secs": 0
+    },
+    {
+      "role": "user",
+      "message": "Hola, ¿a qué hora es mi cita de mañana? Dímelo rápido.",
+      "time_in_call_secs": 6
+    }
+  ],
+  "tool_call_parameters": {
+    "referenced_tool": {
+      "id": "${tool:get_my_appointment}",
+      "type": "webhook"
+    },
+    "verify_absence": true,
+    "parameters": []
+  },
+  "check_any_tool_matches": true
+}

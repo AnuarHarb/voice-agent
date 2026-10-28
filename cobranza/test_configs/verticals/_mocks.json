@@ -1,0 +1,192 @@
+{
+  "verified": {
+    "verified": true,
+    "session_token": "st_mock_session_token_for_tests_0001",
+    "customer_first_name": "Mariana",
+    "attempts_remaining": 3,
+    "locked": false,
+    "incomplete": false,
+    "message": "Identity verified."
+  },
+  "not_verified": {
+    "verified": false,
+    "session_token": "",
+    "customer_first_name": "",
+    "attempts_remaining": 2,
+    "locked": false,
+    "incomplete": false,
+    "message": "The data does not match. Do not reveal whether a customer exists."
+  },
+  "appt_found": {
+    "has_appointment": true,
+    "appointment_ref": "DEM-C-7K3Q9X",
+    "specialist": "Dra. Elena Marín",
+    "specialty": "cardiología",
+    "when_text": "jueves 29 de octubre a las 9 de la mañana",
+    "message": "Upcoming appointment found."
+  },
+  "availability": {
+    "slots": [
+      {
+        "slot_id": "slot_spe_card_1031_11",
+        "specialist": "Dra. Elena Marín",
+        "specialty": "cardiología",
+        "when_text": "sábado 31 de octubre a las 11 de la mañana"
+      },
+      {
+        "slot_id": "slot_spe_card_1102_14",
+        "specialist": "Dra. Elena Marín",
+        "specialty": "cardiología",
+        "when_text": "lunes 2 de noviembre a las 2 de la tarde"
+      }
+    ],
+    "message": ""
+  },
+  "booked": {
+    "booked": true,
+    "appointment_ref": "DEM-C-4M8RTW",
+    "specialist": "Dra. Elena Marín",
+    "when_text": "sábado 31 de octubre a las 11 de la mañana",
+    "message": "Appointment booked."
+  },
+  "cancel_too_late": {
+    "cancelled": false,
+    "too_late": true,
+    "message": "Cancellations need 24 hours of notice. Offer to reschedule or a human handoff."
+  },
+  "reminder": {
+    "sent": true,
+    "message": "Reminder queued (simulated in the demo)."
+  },
+  "orders": {
+    "orders": [
+      {
+        "order_no": "MN-10482",
+        "status": "out_for_delivery",
+        "status_text": "va en camino y llega hoy",
+        "carrier": "Servientrega",
+        "items": "Chaqueta de cuero y cinturón",
+        "total_text": "$389.900",
+        "eta_text": "jueves 29 de octubre"
+      }
+    ],
+    "message": ""
+  },
+  "return_ok": {
+    "started": true,
+    "return_ref": "DEM-D-9PZK2H",
+    "message": "Return created. The label is sent by message (simulated)."
+  },
+  "return_refused": {
+    "started": false,
+    "outside_window": true,
+    "message": "Returns are accepted up to 30 days after delivery. Offer a human handoff."
+  },
+  "cart": {
+    "has_cart": true,
+    "items": "Tenis blancos talla 37",
+    "total_text": "$249.900",
+    "commercial_consent": true,
+    "message": "Pending cart found."
+  },
+  "cart_no_consent": {
+    "has_cart": true,
+    "items": "Morral de viaje",
+    "total_text": "$189.900",
+    "commercial_consent": false,
+    "message": "Pending cart found."
+  },
+  "link_sent": {
+    "sent": true,
+    "message": "Checkout link sent by message (simulated)."
+  },
+  "link_no_consent": {
+    "sent": false,
+    "no_consent": true,
+    "message": "The customer has no commercial consent. Do not send anything; close politely."
+  },
+  "outage_none": {
+    "outage": false,
+    "area": "Laureles",
+    "message": "Sin fallas reportadas en la zona."
+  },
+  "outage_active": {
+    "outage": true,
+    "area": "Belén",
+    "message": "Falla de fibra en la zona de Belén. El equipo técnico estima restablecer el servicio en unas tres horas."
+  },
+  "diag_bad": {
+    "healthy": false,
+    "plan": "Fibra 300 Mbps",
+    "message": "The modem does not respond remotely. A technical visit is needed; open a ticket."
+  },
+  "ticket": {
+    "opened": true,
+    "ticket_ref": "DEM-T-6H2W4N",
+    "message": "Ticket opened. A technician visits within 48 hours."
+  },
+  "offer": {
+    "available": true,
+    "offer_id": "ret_precio",
+    "headline": "Descuento en la mensualidad",
+    "discount_pct": 20,
+    "months": 6,
+    "new_price_text": "$79.920",
+    "current_price_text": "$99.900",
+    "message": "Offer computed by policy. Present it exactly; do not improvise discounts."
+  },
+  "offer_applied": {
+    "applied": true,
+    "message": "Offer applied to the next invoice."
+  },
+  "service_cancelled": {
+    "cancelled": true,
+    "cancellation_ref": "DEM-X-3F7B9K",
+    "effective_text": "viernes 27 de noviembre",
+    "message": "Cancellation registered with the notice period."
+  },
+  "properties": {
+    "properties": [
+      {
+        "property_id": "prop_01",
+        "title": "Apartamento remodelado con balcón",
+        "zone": "Chapinero",
+        "bedrooms": 2,
+        "kind": "venta",
+        "price_text": "$520.000.000"
+      }
+    ],
+    "message": ""
+  },
+  "lead_alto": {
+    "lead_id": "DEM-L-5Q8N2C",
+    "score": "alto",
+    "message": "Lead saved. If the score is alto, offer a visit with an advisor."
+  },
+  "advisor_slots": {
+    "slots": [
+      {
+        "slot_id": "adv_ab12_1031_11",
+        "advisor": "Laura Mejía",
+        "when_text": "sábado 31 de octubre a las 11 de la mañana"
+      },
+      {
+        "slot_id": "adv_ab12_1102_9",
+        "advisor": "Laura Mejía",
+        "when_text": "lunes 2 de noviembre a las 9 de la mañana"
+      }
+    ]
+  },
+  "advisor_booked": {
+    "booked": true,
+    "booking_ref": "DEM-V-8D4T6J",
+    "advisor": "Laura Mejía",
+    "when_text": "sábado 31 de octubre a las 11 de la mañana",
+    "message": "Visit booked."
+  },
+  "handoff": {
+    "ok": true,
+    "handoff_ref": "DEM-H-2K9M5P",
+    "message": "A human advisor will contact the customer. Give the reference and close politely."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "01 Reprograma: verifica, busca cupo y reagenda",
+  "type": "simulation",
+  "simulation_scenario": "Eres Mariana Londoño, paciente de ${tenant_name}. Tienes una cita de cardiología y quieres cambiarla para el sábado. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son uno seis uno dos y que naciste el diecisiete de febrero de mil novecientos ochenta y nueve. Aceptas el primer horario que te ofrezcan y confirmas. Respondes corto, en español.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_my_appointment": "appt_found",
+    "list_availability": "availability",
+    "book_appointment": "booked",
+    "send_reminder": "reminder",
+    "handoff_to_human": "handoff",
+    "cancel_appointment": "cancel_too_late"
+  },
+  "success_conditions": [
+    "The agent verified identity before mentioning any appointment.",
+    "The agent offered at most two slots with the dates returned by list_availability and confirmed date and specialist before booking.",
+    "The agent called book_appointment and told the customer the new date."
+  ]
+}

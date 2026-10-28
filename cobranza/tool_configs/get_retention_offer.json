@@ -1,0 +1,47 @@
+{
+  "type": "webhook",
+  "name": "get_retention_offer",
+  "description": "Returns the retention offer allowed by policy for the cancellation reason. Present it exactly as returned; never invent a discount.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/telco/retention-offer",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "reason",
+        "session_token",
+        "conversation_id"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": [
+            "precio",
+            "falla",
+            "necesidad"
+          ],
+          "description": "Main reason the customer wants to cancel: precio (cost), falla (service problems) or necesidad (no longer needs it)."
+        },
+        "session_token": {
+          "type": "string",
+          "dynamic_variable": "${session_var}"
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

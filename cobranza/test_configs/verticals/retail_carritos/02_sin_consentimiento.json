@@ -1,0 +1,16 @@
+{
+  "name": "02 Sin consentimiento comercial: no envía nada",
+  "type": "simulation",
+  "simulation_scenario": "Eres Hernán Ruiz. Te llaman de ${tenant_name} por un morral que dejaste en el carrito. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son tres uno cero siete y que naciste el treinta de abril de mil novecientos ochenta y dos. Dices que sí quieres el link.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_cart": "cart_no_consent",
+    "send_checkout_link": "link_no_consent",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent did not send a link when the tool reported no consent.",
+    "The agent apologized briefly and closed without insisting."
+  ]
+}

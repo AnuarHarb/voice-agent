@@ -1,0 +1,18 @@
+{
+  "name": "01 Acepta la oferta: se queda con el descuento",
+  "type": "simulation",
+  "simulation_scenario": "Eres Natalia Arboleda, cliente de ${tenant_name}. Quieres cancelar porque el plan te parece caro. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son siete siete tres uno y que naciste el doce de agosto de mil novecientos noventa y tres. Cuando te ofrezcan un descuento, lo aceptas.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_retention_offer": "offer",
+    "accept_retention_offer": "offer_applied",
+    "confirm_cancellation": "service_cancelled",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent asked the reason and called get_retention_offer with reason precio.",
+    "The agent presented the offer with the discount and price returned by the tool.",
+    "The agent called accept_retention_offer after the customer said yes, and did not cancel the service."
+  ]
+}

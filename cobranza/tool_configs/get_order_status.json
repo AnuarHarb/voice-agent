@@ -1,0 +1,41 @@
+{
+  "type": "webhook",
+  "name": "get_order_status",
+  "description": "Looks up the customer's orders: status, carrier and estimated delivery. Pass order_no when the customer gave one, otherwise leave it empty to list recent orders.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/retail/order-status",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "session_token",
+        "conversation_id"
+      ],
+      "properties": {
+        "order_no": {
+          "type": "string",
+          "description": "Order number such as MN-10482. Empty to list the latest orders."
+        },
+        "session_token": {
+          "type": "string",
+          "dynamic_variable": "${session_var}"
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "type": "webhook",
+  "name": "send_checkout_link",
+  "description": "Sends the customer a message with the link to finish their purchase. Only works if the customer gave commercial consent; if the result says no_consent, send nothing and close politely.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/retail/checkout-link",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "session_token",
+        "conversation_id"
+      ],
+      "properties": {
+        "session_token": {
+          "type": "string",
+          "dynamic_variable": "${session_var}"
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

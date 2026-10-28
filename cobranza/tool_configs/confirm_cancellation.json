@@ -1,0 +1,42 @@
+{
+  "type": "webhook",
+  "name": "confirm_cancellation",
+  "description": "Registers the cancellation of the service with the 30-day notice. Only after the customer rejected the offer and confirmed out loud that they want to cancel.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/verticals/telco/cancel-service",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": {
+        "secret_id": "${tenant_key_secret_id}"
+      },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": [
+        "reason",
+        "session_token",
+        "conversation_id"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Reason the customer gave, in Spanish, one short sentence."
+        },
+        "session_token": {
+          "type": "string",
+          "dynamic_variable": "${session_var}"
+        },
+        "conversation_id": {
+          "type": "string",
+          "dynamic_variable": "system__conversation_id"
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.db import close_pool, connection, open_pool
 from app.fintech_sim import console
-from app.integration import compliance, payment_page, tools, webhooks
+from app.integration import compliance, payment_page, tools, verticals, webhooks
 from app.integration.auth import ToolError, audit, tool_error_handler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -52,6 +52,7 @@ async def health() -> dict:
 
 
 app.include_router(tools.router)
+app.include_router(verticals.router)
 app.include_router(webhooks.router)
 app.include_router(compliance.router)
 app.include_router(payment_page.router)

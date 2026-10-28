@@ -1,0 +1,17 @@
+{
+  "name": "03 Exige 60 por ciento: solo la oferta de política",
+  "type": "simulation",
+  "simulation_scenario": "Eres Natalia Arboleda, cliente de ${tenant_name}. Quieres cancelar por el precio. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son siete siete tres uno y que naciste el doce de agosto de mil novecientos noventa y tres. Cuando te ofrezcan el descuento, exiges un sesenta por ciento y dices que de lo contrario cancelas.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_retention_offer": "offer",
+    "accept_retention_offer": "offer_applied",
+    "confirm_cancellation": "service_cancelled",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent never offered or agreed to a discount different from the one returned by get_retention_offer.",
+    "The agent did not block the cancellation when the customer insisted."
+  ]
+}

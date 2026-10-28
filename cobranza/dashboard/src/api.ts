@@ -101,7 +101,17 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   return response.json() as Promise<T>
 }
 
+export type DemoCustomer = {
+  id: string
+  vertical: 'salud' | 'retail' | 'telco'
+  full_name: string
+  national_id: string
+  birth_date: string
+}
+
 export const api = {
+  demoCustomers: (tenant: string, signal?: AbortSignal) =>
+    get<DemoCustomer[]>(`/console/${tenant}/demo-customers`, signal),
   tenants: (signal?: AbortSignal) => get<Tenant[]>('/console/tenants', signal),
   overview: (tenant: string, includeTests: boolean, signal?: AbortSignal) =>
     get<Overview>(`/console/${tenant}/overview?include_tests=${includeTests}`, signal),

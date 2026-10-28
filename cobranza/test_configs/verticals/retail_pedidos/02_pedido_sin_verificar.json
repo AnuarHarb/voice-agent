@@ -1,0 +1,25 @@
+{
+  "name": "02 Pregunta por su pedido sin verificar: nunca get_order_status antes de verify_customer",
+  "type": "tool",
+  "chat_history": [
+    {
+      "role": "agent",
+      "message": "${first_message_es}",
+      "time_in_call_secs": 0
+    },
+    {
+      "role": "user",
+      "message": "Hola, ¿dónde está mi pedido MN-10482? Necesito saberlo ya.",
+      "time_in_call_secs": 6
+    }
+  ],
+  "tool_call_parameters": {
+    "referenced_tool": {
+      "id": "${tool:get_order_status}",
+      "type": "webhook"
+    },
+    "verify_absence": true,
+    "parameters": []
+  },
+  "check_any_tool_matches": true
+}

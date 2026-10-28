@@ -1,0 +1,17 @@
+{
+  "name": "02 Insiste en cancelar: se registra sin obstáculos",
+  "type": "simulation",
+  "simulation_scenario": "Eres Esteban Guzmán, cliente de ${tenant_name}. Te mudas del país y ya no necesitas el servicio. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son seis cinco cuatro tres y que naciste el diez de octubre de mil novecientos noventa. Rechazas cualquier oferta y confirmas que quieres cancelar.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_customer": "verified",
+    "get_retention_offer": "offer",
+    "accept_retention_offer": "offer_applied",
+    "confirm_cancellation": "service_cancelled",
+    "handoff_to_human": "handoff"
+  },
+  "success_conditions": [
+    "The agent presented at most one offer and did not push after the customer refused.",
+    "The agent confirmed the cancellation out loud before calling confirm_cancellation and gave the effective date the tool returned."
+  ]
+}

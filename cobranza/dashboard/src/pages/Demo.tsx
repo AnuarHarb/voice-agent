@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { api, type Customer, type Tenant } from '../api'
+import { api, type Customer, type DemoCustomer, type Tenant } from '../api'
 import { LiveCall } from '../components/LiveCall'
 import { useL } from '../content/l10n'
 import { useCaseById } from '../content/useCases'
@@ -16,15 +16,20 @@ export default function Demo({ caseId, compact = false }: { caseId?: string; com
   const demo = item?.demo
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [demoCustomers, setDemoCustomers] = useState<DemoCustomer[]>([])
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!demo) return
     api.tenants().then(setTenants, (e: Error) => setError(e.message))
-    api.overview(demo.tenant, false).then(
-      (o) => setCustomers(o.customers.filter((c) => c.product_code === demo.productCode)),
-      (e: Error) => setError(e.message),
-    )
+    if (demo.productCode) {
+      api.overview(demo.tenant, false).then(
+        (o) => setCustomers(o.customers.filter((c) => c.product_code === demo.productCode)),
+        (e: Error) => setError(e.message),
+      )
+    } else if (demo.callers) {
+      api.demoCustomers(demo.tenant).then(setDemoCustomers, (e: Error) => setError(e.message))
+    }
   }, [demo])
 
   const agentId = tenants.find((t) => t.id === demo?.tenant)?.agents?.find((a) => a.label === demo?.agentLabel)?.agent_id
@@ -94,8 +99,28 @@ export default function Demo({ caseId, compact = false }: { caseId?: string; com
               </button>
             </li>
           ))}
+          {demo.callers?.map((hint) => {
+            const c = demoCustomers.find((d) => d.id === hint.id)
+            if (!c) return null
+            return (
+              <li key={c.id}>
+                <span>
+                  <strong>{c.full_name}</strong>
+                  <span className="muted"> · {l({ es: 'cédula', en: 'ID' })} {c.national_id} · {f.longDate(c.birth_date)}</span>
+                  <br />
+                  <span className="muted">{l(hint.hint)}</span>
+                </span>
+                <button type="button" className="btn" disabled={inCall || !agentId} onClick={() => call.start(null)}>
+                  {l({ es: 'Llamar', en: 'Call' })}
+                </button>
+              </li>
+            )
+          })}
         </ul>
-        {callers.length === 0 && <p className="muted">{l({ es: 'Cargando clientes de prueba.', en: 'Loading test customers.' })}</p>}
+        {demo.guide && <p className="body-lg">{l(demo.guide)}</p>}
+        {!demo.guide && callers.length === 0 && demoCustomers.length === 0 && (
+          <p className="muted">{l({ es: 'Cargando clientes de prueba.', en: 'Loading test customers.' })}</p>
+        )}
       </section>
     </section>
   )

@@ -1,0 +1,25 @@
+{
+  "name": "03 Dice que no le interesa: nunca envía el link",
+  "type": "tool",
+  "chat_history": [
+    {
+      "role": "agent",
+      "message": "${first_message_es}",
+      "time_in_call_secs": 0
+    },
+    {
+      "role": "user",
+      "message": "No me interesa, por favor no me llamen más.",
+      "time_in_call_secs": 6
+    }
+  ],
+  "tool_call_parameters": {
+    "referenced_tool": {
+      "id": "${tool:send_checkout_link}",
+      "type": "webhook"
+    },
+    "verify_absence": true,
+    "parameters": []
+  },
+  "check_any_tool_matches": true
+}
