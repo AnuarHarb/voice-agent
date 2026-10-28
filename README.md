@@ -1,19 +1,25 @@
-# Responsible collections agent · Avanza Crédito and Nexo Finanzas
+# Inmercity / Agents · voice agents that do the work
 
-An ElevenLabs voice agent that handles early-stage collections for a Colombian fintech. It verifies the caller's identity, offers **only** the plans the credit policy allows, registers the agreement and sends the payment link over Telegram, within Ley 2300 ("Dejen de fregar", Colombia's collections-harassment law).
+A sales and teaching tool from **Inmercity Labs** (Building Intelligence). It shows what production voice agents can do, how one works inside, and how it plugs into a company's systems.
 
-> The model talks; the code decides anything with consequences: identity, money and compliance.
-
-| | |
+| Route | What it shows |
 | --- | --- |
-| Talk to the agent (Avanza) | https://elevenlabs.io/app/talk-to?agent_id=agent_1101m4rhgsg7ezv9abbe1ztkgnf6 |
-| Fintech console | https://dashboard-production-ea78.up.railway.app |
-| Backend (integration) | https://voice-agent-production-64b9.up.railway.app/health |
-| Example Conversation ID | `conv_0701m4rpy0bpf5p8169kkpce77qk` |
+| `/` | Positioning and entry points by industry |
+| `/casos`, `/casos/:id` | 11 use cases across finance, healthcare, retail, telecom and real estate. Five finance cases have live demos; the rest are marked as concept |
+| `/como-funciona` | The six parts of an agent, each with a real example from this repo, and an annotated call |
+| `/integracion` | Channel, agent, tools API and client systems; one tool contract; multi-client isolation; project phases |
+| `/demo/:id` | Call a live agent from the browser, with an X-ray panel of its tool calls |
+| `/presentacion/:n` | Slide mode for meetings: arrows, `N` for notes, `F` for fullscreen |
+| `/consola` | Behind the scenes: customers, plans, conversations and policy per client |
 
-This document explains **how the system is split and why**. For setup, deployment and operations, see [`cobranza/README.md`](cobranza/README.md). The agent speaks Colombian Spanish and switches to English if the customer does. The console has a Spanish/English switch in its header.
+The site follows the Inmercity Labs identity manual: tokens in `cobranza/dashboard/src/brand.css`, content in `cobranza/dashboard/src/content/`. Demos use fictional names and data. The take-home evaluation version is frozen at tag `take-home-v1`.
 
----
+The agents behind the demos are the five cases in `cobranza/agent_configs/cases/`. Setup, deployment and operations: [`cobranza/README.md`](cobranza/README.md).
+
+## Technical architecture
+
+The model talks; the code decides anything with consequences: identity, money and compliance.
+
 
 ## Three pieces: the client, the integration and the agent
 

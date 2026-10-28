@@ -10,13 +10,13 @@
 }
 
 @theme inline {
-  --font-sans: 'Public Sans Variable', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, sans-serif;
   --color-background: var(--surface);
   --color-foreground: var(--ink);
   --color-card: var(--surface);
   --color-card-foreground: var(--ink);
   --color-primary: var(--accent);
-  --color-primary-foreground: #fff;
+  --color-primary-foreground: var(--ink-inverse);
   --color-secondary: var(--accent-soft);
   --color-secondary-foreground: var(--ink);
   --color-muted: var(--paper);

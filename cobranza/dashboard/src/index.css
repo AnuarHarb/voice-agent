@@ -1,39 +1,23 @@
 :root {
-  --paper: #f2f5f3;
-  --surface: #ffffff;
-  --ink: #1d2b26;
-  --muted: #5d6c66;
-  --rule: #d5ddd9;
-  --mora: #9a5a00;
-  --mora-bg: #fbf1e1;
-  --warn: #a3332b;
-  --accent: #0b6b4f;
-  --accent-soft: #e3f0ea;
-
   --step--1: 0.875rem;
   --step-0: 1rem;
   --step-1: 1.25rem;
   --step-2: 1.6rem;
   --step-3: 2.6rem;
 
-  font-family: 'Public Sans Variable', system-ui, sans-serif;
   font-size: var(--step-0);
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--ink);
-  background: var(--paper);
+  background: var(--surface);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
-}
-
-.app[data-tenant='nexo'] {
-  --accent: #2f4fa8;
-  --accent-soft: #e6ebf7;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; }
 h1, h2, h3, p, dl, dd, ol, ul { margin: 0; }
 ul[role='list'], ol { padding: 0; list-style: none; }
+body { background: var(--surface); }
 a { color: var(--accent); text-underline-offset: 0.2em; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 code { font-size: 0.92em; }
@@ -43,10 +27,10 @@ code { font-size: 0.92em; }
 /* masthead: the fintech's name is the brand; the accent color follows it */
 .masthead {
   display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem;
-  padding: 2rem 0 1.25rem; border-bottom: 3px solid var(--accent);
+  padding: 2rem 0 1.25rem; border-bottom: 1px solid var(--line);
 }
 .brand p { color: var(--accent); font-weight: 650; font-size: var(--step-1); min-height: 1.5em; }
-.brand h1 { font-size: var(--step-3); line-height: 1.05; font-weight: 750; letter-spacing: -0.02em; }
+.brand h1 { font-family: var(--font-display); font-size: var(--step-3); line-height: 1.05; font-weight: 750; letter-spacing: -0.02em; }
 
 .masthead ul { display: flex; gap: 0.25rem; padding: 0.25rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; }
 .masthead a {
@@ -135,11 +119,10 @@ code { font-size: 0.92em; }
 }
 .live-agent {
   display: grid; justify-items: center; align-content: start; gap: 1rem; padding: 1.75rem 1.25rem;
-  background: linear-gradient(to bottom, var(--accent-soft), var(--surface));
+  background: var(--surface-raised);
 }
 .orb {
   width: 13rem; aspect-ratio: 1; border-radius: 50%;
-  box-shadow: 0 1.25rem 3rem -1rem color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .live-status { min-height: 1.5em; font-weight: 600; text-align: center; }
 .live-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }

@@ -2,7 +2,6 @@
 	root * /srv
 	encode zstd gzip
 	header {
-		X-Robots-Tag "noindex"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
 	}

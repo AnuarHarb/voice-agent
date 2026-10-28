@@ -104,7 +104,7 @@ async def contact_window(
 ) -> ContactWindowResponse:
     async with tenant_tx(tenant.id) as conn:
         exists = await conn.fetchval(
-            "select 1 from cobranza.pii_vault where person_token = $1", person_id
+            "select 1 from cobranza.accounts where person_token = $1 limit 1", person_id
         )
         if exists is None:
             raise ToolError(404, "person_not_found", "Unknown person for this tenant.")

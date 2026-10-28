@@ -1,5 +1,6 @@
 """Credit policy per product: the only source of payment amounts and dates."""
 
+import json
 import math
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -53,7 +54,9 @@ class PaymentOptionsResult:
     escalate: bool = False
 
 
-def parse_product_policy(raw: dict) -> ProductPolicyRow:
+def parse_product_policy(raw: dict | str) -> ProductPolicyRow:
+    if isinstance(raw, str):  # asyncpg returns jsonb as text without a codec
+        raw = json.loads(raw)
     opts = raw.get("options") or {}
     return ProductPolicyRow(
         timezone=raw.get("timezone", "America/Bogota"),

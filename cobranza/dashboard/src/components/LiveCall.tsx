@@ -9,8 +9,8 @@ import type { LiveCall as Call } from '../live'
 const Orb = lazy(() => import('@/components/ui/orb').then((m) => ({ default: m.Orb })))
 
 const ORB_COLORS: Record<string, [string, string]> = {
-  avanza: ['#7fd3b0', '#1f8a66'],
-  nexo: ['#9db4f2', '#2f4fa8'],
+  avanza: ['#847dff', '#635bff'],
+  nexo: ['#847dff', '#635bff'],
 }
 
 function StatusLine({ call, agentName }: { call: Call; agentName: string }) {

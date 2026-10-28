@@ -1,0 +1,77 @@
+/* Inmercity Labs design tokens. Source: manual-identidad-inmercity-labs.md */
+@font-face { font-family: 'Sora'; font-weight: 400; font-display: swap; src: url('/brand/fonts/Sora-400.ttf') format('truetype'); }
+@font-face { font-family: 'Sora'; font-weight: 600; font-display: swap; src: url('/brand/fonts/Sora-600.ttf') format('truetype'); }
+@font-face { font-family: 'Geist'; font-weight: 100 900; font-display: swap; src: url('/brand/fonts/Geist-Variable.woff2') format('woff2'); }
+@font-face { font-family: 'Geist Mono'; font-weight: 100 900; font-display: swap; src: url('/brand/fonts/GeistMono-Variable.woff2') format('woff2'); }
+
+:root {
+  --surface: #ffffff;
+  --surface-raised: #f4f6f8;
+  --ink: #07090d;
+  --ink-muted: #4b5568;
+  --ink-inverse: #ffffff;
+  --brand-blue: #145cf8;
+  --electric-iris: #635bff;
+  --spark: #5cd1d1;
+  --line: #e3e7ed;
+
+  --font-display: 'Sora', 'Geist', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-pill: 999px;
+  --shadow-float: 0 1px 2px rgba(7, 9, 13, 0.05), 0 12px 32px rgba(7, 9, 13, 0.1);
+
+  --text-display-xl: clamp(2.5rem, 6vw, 4rem);
+  --text-display: clamp(1.9rem, 4vw, 2.75rem);
+  --text-h1: 2rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.1875rem;
+  --text-body-lg: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.8125rem;
+  --text-mono-label: 0.75rem;
+
+  font-family: var(--font-sans);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --surface: #07090d;
+  --surface-raised: #0a1020;
+  --ink: #f4f6f8;
+  --ink-muted: #9aa3b5;
+  --ink-inverse: #07090d;
+  --brand-blue: #3d7bff;
+  --electric-iris: #847dff;
+  --line: #1c2436;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --surface: #07090d;
+    --surface-raised: #0a1020;
+    --ink: #f4f6f8;
+    --ink-muted: #9aa3b5;
+    --ink-inverse: #07090d;
+    --brand-blue: #3d7bff;
+    --electric-iris: #847dff;
+    --line: #1c2436;
+    color-scheme: dark;
+  }
+}
+
+/* Aliases so the console keeps working on the new tokens */
+:root {
+  --paper: var(--surface-raised);
+  --muted: var(--ink-muted);
+  --rule: var(--line);
+  --accent: var(--brand-blue);
+  --accent-soft: color-mix(in srgb, var(--brand-blue) 12%, var(--surface));
+  --warn: #c8372d;
+  --mora: #b26a00;
+  --mora-bg: color-mix(in srgb, #b26a00 14%, var(--surface));
+}

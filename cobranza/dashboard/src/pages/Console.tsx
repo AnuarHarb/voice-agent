@@ -1,22 +1,19 @@
 import { useCallback, useEffect, useEffectEvent, useState } from 'react'
-import { api, type Overview, type Tenant } from './api'
-import { Cases } from './components/Cases'
-import { CasesCatalog } from './components/CasesCatalog'
-import { Conversion } from './components/Conversion'
-import { Conversations } from './components/Conversations'
-import { Customers } from './components/Customers'
-import { LiveCall } from './components/LiveCall'
-import { Plans } from './components/Plans'
+import { api, type Overview, type Tenant } from '../api'
+import { Cases } from '../components/Cases'
+import { Conversion } from '../components/Conversion'
+import { Conversations } from '../components/Conversations'
+import { Customers } from '../components/Customers'
+import { LiveCall } from '../components/LiveCall'
+import { Plans } from '../components/Plans'
 import { ShimmeringText } from '@/components/ui/shimmering-text'
-import { summaryFacts, useI18n, type Lang } from './i18n'
-import { useLiveCall } from './live'
+import { summaryFacts, useI18n } from '../i18n'
+import { useLiveCall } from '../live'
 
 const REFRESH_MS = 10_000
 const AGENT_NAME: Record<string, string> = { avanza: 'Sofía', nexo: 'Horacio' }
-const LANGUAGES: { id: Lang; name: string }[] = [{ id: 'es', name: 'Español' }, { id: 'en', name: 'English' }]
 
 const tenantFromUrl = () => new URLSearchParams(location.search).get('fintech') ?? 'avanza'
-const viewFromUrl = () => new URLSearchParams(location.search).get('view') ?? 'console'
 const productFromUrl = () => new URLSearchParams(location.search).get('product') ?? 'all'
 
 function Summary({ data }: { data: Overview }) {
@@ -35,24 +32,10 @@ function Policy({ data }: { data: Overview }) {
   )
 }
 
-function LanguageSwitch() {
-  const { lang, setLang, t } = useI18n()
-  return (
-    <div className="lang-switch" role="group" aria-label={t.languageGroup}>
-      {LANGUAGES.map((l) => (
-        <button key={l.id} type="button" lang={l.id} aria-pressed={l.id === lang} onClick={() => setLang(l.id)}>
-          {l.name}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-export default function App() {
+export default function Console() {
   const { t, f } = useI18n()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [tenant, setTenant] = useState(tenantFromUrl)
-  const [view, setView] = useState(viewFromUrl)
   const [product, setProduct] = useState(productFromUrl)
   const [includeTests, setIncludeTests] = useState(false)
   const [data, setData] = useState<Overview | null>(null)
@@ -111,7 +94,6 @@ export default function App() {
 
   const onPop = useEffectEvent(() => {
     switchTenant(tenantFromUrl())
-    setView(viewFromUrl())
     setProduct(productFromUrl())
   })
   useEffect(() => {
@@ -128,7 +110,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-tenant={tenant}>
+    <div className="app">
       <header className="masthead">
         <div className="brand">
           <p>{current?.name ?? ' '}</p>
@@ -146,23 +128,6 @@ export default function App() {
               ))}
             </ul>
           </nav>
-          <nav aria-label={t.casesNav}>
-            <ul role="list" className="view-nav">
-              <li>
-                <a href={`?fintech=${tenant}&view=console`} aria-current={view === 'console' ? 'page' : undefined}
-                  onClick={(e) => { e.preventDefault(); history.pushState(null, '', `?fintech=${tenant}&view=console`); setView('console') }}>
-                  {t.consoleNav}
-                </a>
-              </li>
-              <li>
-                <a href={`?fintech=${tenant}&view=casos`} aria-current={view === 'casos' ? 'page' : undefined}
-                  onClick={(e) => { e.preventDefault(); history.pushState(null, '', `?fintech=${tenant}&view=casos`); setView('casos') }}>
-                  {t.casesNav}
-                </a>
-              </li>
-            </ul>
-          </nav>
-          <LanguageSwitch />
         </div>
       </header>
 
@@ -186,10 +151,7 @@ export default function App() {
           </div>
         </section>
 
-        {shown && view === 'casos' && current && (
-          <CasesCatalog tenant={current} agents={agents} />
-        )}
-        {shown && view !== 'casos' && (
+        {shown && (
           <>
             {shown.products.length > 0 && (
               <nav className="product-tabs" aria-label={t.productTabsLabel}>
