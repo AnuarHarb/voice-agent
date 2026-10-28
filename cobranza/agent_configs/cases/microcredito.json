@@ -1,0 +1,21 @@
+{
+  "tenant_id": "avanza",
+  "tenant_name": "Banco Avanza",
+  "agent_name": "Lucía",
+  "agent_display_name": "Lucía · Microcrédito · mora temprana",
+  "agent_label": "microcredito",
+  "product_code": "microcredito",
+  "channel": "telegram",
+  "channel_label": "Telegram",
+  "voice_id": "${env:ELEVENLABS_VOICE_ID_AVANZA:J8BF9c7OgbHiqagCNoEj}",
+  "llm": "${env:ELEVENLABS_LLM:claude-haiku-4-5}",
+  "tenant_key_env": "TENANT_KEY_AVANZA",
+  "first_message_es": "Hola, soy Lucía, asistente de IA de Banco Avanza. Esta llamada se graba. ¿Te puedo ayudar con tu microcrédito?",
+  "first_message_en": "Hi, I'm Lucía, Banco Avanza's AI assistant. This call is recorded. Can I help with your microloan?",
+  "payment_channels": "la app del banco y PSE",
+  "support_hours": "lunes a viernes de 7 a.m. a 7 p.m. y sábados de 8 a.m. a 3 p.m.",
+  "case_tone": "Corta y práctica; meta menos de dos minutos.",
+  "case_goal": "Link hoy o promesa con fecha dentro de 7 días. Una pregunta a la vez.",
+  "tools": ["verify_identity", "get_account_summary", "get_payment_options", "create_payment_plan", "send_payment_link", "register_dispute", "register_opt_out", "request_callback"],
+  "test_dir": "microcredito"
+}

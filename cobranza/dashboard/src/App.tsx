@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useEffectEvent, useState } from 'react'
 import { api, type Overview, type Tenant } from './api'
 import { Cases } from './components/Cases'
+import { CasesCatalog } from './components/CasesCatalog'
+import { Conversion } from './components/Conversion'
 import { Conversations } from './components/Conversations'
 import { Customers } from './components/Customers'
 import { LiveCall } from './components/LiveCall'
@@ -14,6 +16,8 @@ const AGENT_NAME: Record<string, string> = { avanza: 'Sofía', nexo: 'Horacio' }
 const LANGUAGES: { id: Lang; name: string }[] = [{ id: 'es', name: 'Español' }, { id: 'en', name: 'English' }]
 
 const tenantFromUrl = () => new URLSearchParams(location.search).get('fintech') ?? 'avanza'
+const viewFromUrl = () => new URLSearchParams(location.search).get('view') ?? 'console'
+const productFromUrl = () => new URLSearchParams(location.search).get('product') ?? 'all'
 
 function Summary({ data }: { data: Overview }) {
   const { t, f } = useI18n()
@@ -21,12 +25,12 @@ function Summary({ data }: { data: Overview }) {
 }
 
 function Policy({ data }: { data: Overview }) {
-  const { t, f } = useI18n()
+  const { t } = useI18n()
   if (!data.policy) return null
   return (
     <section className="block policy" aria-labelledby="politica">
       <h2 id="politica">{t.policyTitle}</h2>
-      <p>{t.policy(data.policy, f.money)}</p>
+      <p>{t.policy(data.policy)}</p>
     </section>
   )
 }
@@ -48,6 +52,8 @@ export default function App() {
   const { t, f } = useI18n()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [tenant, setTenant] = useState(tenantFromUrl)
+  const [view, setView] = useState(viewFromUrl)
+  const [product, setProduct] = useState(productFromUrl)
   const [includeTests, setIncludeTests] = useState(false)
   const [data, setData] = useState<Overview | null>(null)
   const [error, setError] = useState('')
@@ -75,8 +81,14 @@ export default function App() {
   const current = tenants.find((t) => t.id === tenant)
   const agentName = AGENT_NAME[tenant] ?? t.agentFallback
   const shown = data?.tenant.id === tenant ? data : null
+  const agents = current?.agents ?? []
+  const liveAgentId = agents.find((a) => a.label === product)?.agent_id
+    ?? agents.find((a) => a.label === 'libre_inversion_mora')?.agent_id
+    ?? current?.agent_id
+  const filterByProduct = <T extends { product_code?: string }>(rows: T[]) =>
+    product === 'all' ? rows : rows.filter((r) => r.product_code === product)
 
-  const call = useLiveCall(current?.agent_id ?? undefined, () => {
+  const call = useLiveCall(liveAgentId ?? undefined, () => {
     load()
     setTimeout(() => load(), 4000)
   })
@@ -97,7 +109,11 @@ export default function App() {
     setTenant(id)
   }
 
-  const onPop = useEffectEvent(() => switchTenant(tenantFromUrl()))
+  const onPop = useEffectEvent(() => {
+    switchTenant(tenantFromUrl())
+    setView(viewFromUrl())
+    setProduct(productFromUrl())
+  })
   useEffect(() => {
     const listener = () => onPop()
     addEventListener('popstate', listener)
@@ -130,6 +146,22 @@ export default function App() {
               ))}
             </ul>
           </nav>
+          <nav aria-label={t.casesNav}>
+            <ul role="list" className="view-nav">
+              <li>
+                <a href={`?fintech=${tenant}&view=console`} aria-current={view === 'console' ? 'page' : undefined}
+                  onClick={(e) => { e.preventDefault(); history.pushState(null, '', `?fintech=${tenant}&view=console`); setView('console') }}>
+                  {t.consoleNav}
+                </a>
+              </li>
+              <li>
+                <a href={`?fintech=${tenant}&view=casos`} aria-current={view === 'casos' ? 'page' : undefined}
+                  onClick={(e) => { e.preventDefault(); history.pushState(null, '', `?fintech=${tenant}&view=casos`); setView('casos') }}>
+                  {t.casesNav}
+                </a>
+              </li>
+            </ul>
+          </nav>
           <LanguageSwitch />
         </div>
       </header>
@@ -154,20 +186,55 @@ export default function App() {
           </div>
         </section>
 
-        {shown && (
+        {shown && view === 'casos' && current && (
+          <CasesCatalog tenant={current} agents={agents} />
+        )}
+        {shown && view !== 'casos' && (
           <>
-            {current?.agent_id && <LiveCall call={call} tenant={tenant} agentName={agentName} />}
-            <Customers
-              tenant={tenant}
-              customers={shown.customers}
-              agentName={agentName}
-              onCall={inCall ? undefined : callAs}
-              onAdded={load}
-            />
-            <Plans plans={shown.plans} />
-            <Conversations tenant={tenant} conversations={shown.conversations} />
-            <Cases cases={shown.cases} />
-            <Policy data={shown} />
+            {shown.products.length > 0 && (
+              <nav className="product-tabs" aria-label={t.productTabsLabel}>
+                <ul role="list">
+                  <li>
+                    <button type="button" aria-pressed={product === 'all'} onClick={() => setProduct('all')}>
+                      {t.productAll}
+                    </button>
+                  </li>
+                  {shown.products.map((p) => (
+                    <li key={p.product_code}>
+                      <button type="button" aria-pressed={product === p.product_code}
+                        onClick={() => setProduct(p.product_code)}>
+                        {p.display_name}
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button type="button" aria-pressed={product === 'conversion'}
+                      onClick={() => setProduct('conversion')}>
+                      {t.conversionTitle}
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
+            {product === 'conversion' && shown.conversion && <Conversion stats={shown.conversion} />}
+            {product !== 'conversion' && liveAgentId && (
+              <LiveCall call={call} tenant={tenant} agentName={agentName} />
+            )}
+            {product !== 'conversion' && (
+              <>
+                <Customers
+                  tenant={tenant}
+                  customers={filterByProduct(shown.customers)}
+                  agentName={agentName}
+                  onCall={inCall ? undefined : callAs}
+                  onAdded={load}
+                />
+                <Plans plans={shown.plans} />
+                <Conversations tenant={tenant} conversations={shown.conversations} />
+                <Cases cases={shown.cases} />
+                <Policy data={shown} />
+              </>
+            )}
           </>
         )}
       </main>

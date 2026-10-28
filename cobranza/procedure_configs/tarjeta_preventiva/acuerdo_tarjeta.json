@@ -1,0 +1,35 @@
+{
+  "name": "Acuerdo tarjeta preventiva",
+  "type": "deterministic",
+  "trigger": "Verified customer wants to pay the card or asks about the statement.",
+  "steps": [
+    {
+      "type": "tool_call",
+      "tool": "get_account_summary",
+      "on_failure": "retry_then_escalate"
+    },
+    {
+      "type": "say",
+      "message": "Share minimum_payment_text and due_date_text when present; never mention mora."
+    },
+    {
+      "type": "tool_call",
+      "tool": "get_payment_options",
+      "on_failure": "retry_then_escalate"
+    },
+    {
+      "type": "tell",
+      "instruction": "Present options (minimum and total). Offer refinance_options only if the customer says they cannot pay."
+    },
+    {
+      "type": "tool_call",
+      "tool": "create_payment_plan",
+      "on_failure": "retry_then_escalate"
+    },
+    {
+      "type": "tool_call",
+      "tool": "send_payment_link",
+      "on_failure": "retry_then_escalate"
+    }
+  ]
+}

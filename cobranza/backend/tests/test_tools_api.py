@@ -215,7 +215,7 @@ async def test_opt_out_linked_and_unlinked(client, avanza_key, nexo_key, convers
     assert other_tenant["linked_to_account"] is False
 
     window = (await client.get("/compliance/contact-window", headers=h(avanza_key), params={
-        "account_id": FIXTURE_ACCOUNT, "at": "2026-10-13T10:00:00-05:00"})).json()
+        "person_id": "per_avz_pytest", "purpose": "cobranza", "at": "2026-10-13T10:00:00-05:00"})).json()
     assert window["allowed"] is False and window["reasons"] == ["customer_opted_out"]
 
 
@@ -229,7 +229,7 @@ async def test_callback_without_verification(client, avanza_key, conversation_id
 async def test_contact_window_endpoint(client, avanza_key):
     async def window(at: str, channel: str = "voice"):
         return (await client.get("/compliance/contact-window", headers=h(avanza_key), params={
-            "account_id": "acc_avz_0002", "channel": channel, "at": at})).json()
+            "person_id": "per_avz_carlos", "purpose": "cobranza", "channel": channel, "at": at})).json()
 
     assert (await window("2026-10-13T10:00:00-05:00"))["allowed"] is True
     holiday = await window("2026-10-12T10:00:00-05:00")
@@ -239,7 +239,7 @@ async def test_contact_window_endpoint(client, avanza_key):
     assert night["reasons"] == ["outside_legal_hours"]
 
     unknown = await client.get("/compliance/contact-window", headers=h(avanza_key),
-                               params={"account_id": "acc_nxo_0001"})
+                               params={"person_id": "per_nxo_andres", "purpose": "cobranza"})
     assert unknown.status_code == 404  # another tenant's account does not exist for Avanza
 
 

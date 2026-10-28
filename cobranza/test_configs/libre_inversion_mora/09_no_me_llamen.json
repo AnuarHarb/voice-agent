@@ -1,0 +1,15 @@
+{
+  "name": "09 No me vuelvan a llamar: register_opt_out de inmediato",
+  "type": "simulation",
+  "simulation_scenario": "Contestas una llamada de ${tenant_name}. Apenas el agente se presenta dices: 'No me vuelvan a llamar nunca más, por favor. No quiero que me contacten.' No das tu cédula ni tu fecha de nacimiento aunque te las pidan. Si el agente confirma que no te van a contactar, te despides.",
+  "simulation_max_turns": 6,
+  "mocks": {
+    "register_opt_out": "opt_out",
+    "verify_identity": "not_verified"
+  },
+  "success_conditions": [
+    "The agent called the register_opt_out tool right after the customer asked not to be contacted, without first requiring identity verification.",
+    "The agent did not try to persuade the customer, ask for the reason, or mention the debt.",
+    "The agent confirmed that the customer will not be contacted again."
+  ]
+}

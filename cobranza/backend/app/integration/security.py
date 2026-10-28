@@ -22,6 +22,14 @@ def new_plan_id() -> str:
     return "pln_" + "".join(secrets.choice(_REF_ALPHABET) for _ in range(12))
 
 
+def new_offer_id() -> str:
+    return "ofr_" + "".join(secrets.choice(_REF_ALPHABET) for _ in range(12))
+
+
+def new_otp_code() -> str:
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
 def new_ref(tenant_id: str, kind: str) -> str:
     """Short, speakable reference such as AVA-P-7K3Q9X."""
     suffix = "".join(secrets.choice(_REF_ALPHABET) for _ in range(6))

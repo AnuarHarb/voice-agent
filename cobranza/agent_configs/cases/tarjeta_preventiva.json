@@ -1,0 +1,21 @@
+{
+  "tenant_id": "avanza",
+  "tenant_name": "Banco Avanza",
+  "agent_name": "Valentina",
+  "agent_display_name": "Valentina · Tarjeta · cobranza preventiva",
+  "agent_label": "tarjeta_preventiva",
+  "product_code": "tarjeta",
+  "channel": "telegram",
+  "channel_label": "Telegram",
+  "voice_id": "${env:ELEVENLABS_VOICE_ID_AVANZA:J8BF9c7OgbHiqagCNoEj}",
+  "llm": "${env:ELEVENLABS_LLM:claude-haiku-4-5}",
+  "tenant_key_env": "TENANT_KEY_AVANZA",
+  "first_message_es": "Hola, soy Valentina, la asistente de inteligencia artificial de Banco Avanza. Esta llamada se graba y puede compartirse con nuestros proveedores de tecnología. Te llamo por un recordatorio de tu tarjeta, ¿tienes un minuto?",
+  "first_message_en": "Hi, I'm Valentina, Banco Avanza's AI assistant. This call is recorded and may be shared with our technology providers. I'm calling with a reminder about your card—do you have a minute?",
+  "payment_channels": "la app del banco, PSE y corresponsales",
+  "support_hours": "lunes a viernes de 7 a.m. a 7 p.m. y sábados de 8 a.m. a 3 p.m.",
+  "case_tone": "Recordatorio amable; no es una llamada de cobro.",
+  "case_goal": "Que pague antes del vencimiento. No uses la palabra mora. Ofrece rediferido solo si dice que no le alcanza.",
+  "tools": ["verify_identity", "get_account_summary", "get_payment_options", "create_payment_plan", "send_payment_link", "register_dispute", "register_opt_out", "request_callback"],
+  "test_dir": "tarjeta_preventiva"
+}

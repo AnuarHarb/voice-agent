@@ -1,5 +1,5 @@
 import { createContext, use, type ReactNode } from 'react'
-import type { Overview, Policy } from './api'
+import type { Overview } from './api'
 
 export type Lang = 'es' | 'en'
 
@@ -62,17 +62,35 @@ const es = {
         : `${s.calm === s.scored ? 'Todas las' : `${s.calm} de ${s.scored}`} llamadas analizadas terminaron sin el cliente molesto.`)}
     </>
   ),
-  policyTitle: 'Política de crédito',
-  policy: (p: Policy, money: Format['money']) => (
-    <>
-      Hasta {p.max_installments} {p.max_installments === 1 ? 'cuota' : 'cuotas'} de mínimo {money(p.min_installment_cop)},
-      con el primer pago en los próximos {p.first_payment_max_days} días.{' '}
-      {p.hardship_enabled
-        ? `A quien cuenta una dificultad económica se le puede ofrecer ${p.hardship_installments} cuotas, empezando en ${p.hardship_grace_days} días.`
-        : 'No hay opción especial por dificultad económica: esos casos pasan a un asesor.'}
-      {' '}Nunca hay descuentos.
-    </>
-  ),
+  policyTitle: 'Política de crédito (por producto)',
+  policy: (p: Record<string, unknown>) => {
+    const opts = (p.options ?? {}) as Record<string, unknown>
+    if (opts.mode === 'card_preventive') return <>Tarjeta al día: pago mínimo, total y rediferido según política.</>
+    if (opts.mode === 'promise') return <>Microcrédito: pago hoy o promesa dentro de {String(opts.promise_max_days ?? 7)} días.</>
+    return (
+      <>
+        Modo {String(opts.mode ?? 'overdue')}: hasta {String(opts.max_installments ?? '—')} cuotas, mínimo{' '}
+        {String(opts.min_installment_cop ?? '—')} COP. Sin descuentos.
+      </>
+    )
+  },
+  productTabsLabel: 'Producto',
+  productAll: 'Todos',
+  conversionTitle: 'Conversión comercial',
+  conversionOffered: 'Ofertas activas',
+  conversionDisbursed: 'Desembolsos confirmados',
+  conversionRejected: 'Rechazadas',
+  conversionAmount: 'Monto desembolsado',
+  casesNav: 'Casos de uso',
+  consoleNav: 'Consola',
+  casesCatalogTitle: 'Catálogo de casos',
+  casesCatalogLead: 'Cinco conversaciones sobre la misma arquitectura: cliente, integración y agente.',
+  casesConsoleCaption: 'Vista de consola después de la llamada',
+  casesScreenshotPending: 'Captura pendiente',
+  casesAudioPending: 'Grabación pendiente (60–90 s)',
+  casesTryLive: 'Pruébalo tú',
+  casesAgentPending: 'Publica el agente del caso para habilitar el enlace.',
+  casesTenantNote: (name: string) => `Demos de ${name}; nombres y datos ficticios.`,
   footer: (
     <>
       Simulación del back office de la fintech. Cada consulta usa el rol de solo lectura <code>cobranza_console</code>,
@@ -234,17 +252,35 @@ const en: Messages = {
         : `${s.calm === s.scored ? 'All' : `${s.calm} of ${s.scored}`} analyzed calls ended without the customer upset.`)}
     </>
   ),
-  policyTitle: 'Credit policy',
-  policy: (p, money) => (
-    <>
-      Up to {p.max_installments} {p.max_installments === 1 ? 'installment' : 'installments'} of at least {money(p.min_installment_cop)},
-      with the first payment within {p.first_payment_max_days} days.{' '}
-      {p.hardship_enabled
-        ? `Customers who describe financial hardship can be offered ${p.hardship_installments} installments, starting in ${p.hardship_grace_days} days.`
-        : 'There is no special hardship option: those cases go to an advisor.'}
-      {' '}There are never discounts.
-    </>
-  ),
+  policyTitle: 'Credit policy (per product)',
+  policy: (p: Record<string, unknown>) => {
+    const opts = (p.options ?? {}) as Record<string, unknown>
+    if (opts.mode === 'card_preventive') return <>Current card: minimum, full balance, refinance per policy.</>
+    if (opts.mode === 'promise') return <>Microloan: pay today or promise within {String(opts.promise_max_days ?? 7)} days.</>
+    return (
+      <>
+        Mode {String(opts.mode ?? 'overdue')}: up to {String(opts.max_installments ?? '—')} installments, minimum{' '}
+        {String(opts.min_installment_cop ?? '—')} COP. No discounts.
+      </>
+    )
+  },
+  productTabsLabel: 'Product',
+  productAll: 'All',
+  conversionTitle: 'Commercial conversion',
+  conversionOffered: 'Active offers',
+  conversionDisbursed: 'Confirmed disbursements',
+  conversionRejected: 'Rejected',
+  conversionAmount: 'Disbursed amount',
+  casesNav: 'Use cases',
+  consoleNav: 'Console',
+  casesCatalogTitle: 'Case catalog',
+  casesCatalogLead: 'Five conversations on the same architecture: client, integration, and agent.',
+  casesConsoleCaption: 'Console view after the call',
+  casesScreenshotPending: 'Screenshot pending',
+  casesAudioPending: 'Recording pending (60–90 s)',
+  casesTryLive: 'Try it yourself',
+  casesAgentPending: 'Publish the case agent to enable the link.',
+  casesTenantNote: (name: string) => `${name} demos; fictional names and data.`,
   footer: (
     <>
       A simulation of the fintech's back office. Every query uses the read-only role <code>cobranza_console</code>,

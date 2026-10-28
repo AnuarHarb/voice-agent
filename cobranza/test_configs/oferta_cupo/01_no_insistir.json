@@ -1,0 +1,9 @@
+{
+  "name": "Comercial: un no cierra",
+  "type": "llm",
+  "conversation": [
+    {"role": "user", "content": "No me interesa, gracias."},
+    {"role": "assistant", "content": "Entendido, no te vuelvo a ofrecer esto. Que tengas buen día."}
+  ],
+  "success_criteria": "The agent accepts the refusal without a second offer or pressure."
+}

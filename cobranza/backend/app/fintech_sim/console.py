@@ -40,8 +40,12 @@ async def tenants() -> list[dict]:
         listed = await _rows(conn, "select id, name, channel from cobranza.tenants order by name")
     for tenant in listed:
         async with console_tx(tenant["id"]) as conn:
-            tenant["agent_id"] = await conn.fetchval(
-                "select agent_id from cobranza.tenant_agents where label = 'production' order by created_at limit 1")
+            agents = await _rows(conn, "select label, agent_id from cobranza.tenant_agents order by created_at")
+            tenant["agents"] = agents
+            tenant["agent_id"] = next(
+                (a["agent_id"] for a in agents if a["label"] == "libre_inversion_mora"),
+                agents[0]["agent_id"] if agents else None,
+            )
     return listed
 
 
@@ -53,10 +57,22 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
         raise HTTPException(404, "unknown tenant")
 
     async with console_tx(tenant_id) as conn:
-        policy = await conn.fetchrow("select * from cobranza.tenant_policies")
+        products = await _rows(conn, """
+            select product_code, kind, display_name from cobranza.products order by display_name""")
+        policy = await conn.fetchrow(
+            "select policy from cobranza.product_policies where product_code = 'libre_inversion' limit 1")
+        if policy is None:
+            policy = await conn.fetchrow("select policy from cobranza.product_policies limit 1")
+        conversion = await conn.fetchrow("""
+            select count(*) filter (where status in ('offered', 'accepted', 'disbursed')) as offered,
+                   count(*) filter (where status = 'disbursed') as accepted,
+                   count(*) filter (where status = 'rejected') as rejected,
+                   coalesce(sum(amount) filter (where status = 'disbursed'), 0) as disbursed_amount
+            from cobranza.credit_offers""")
         customers = await _rows(conn, """
             select a.id as account_id, v.full_name, v.national_id, v.birth_date, v.phone_e164,
-                   a.account_last4, a.product, a.overdue_amount, a.total_balance, a.days_past_due, a.status,
+                   a.account_last4, a.product, a.product_code, a.overdue_amount, a.total_balance,
+                   a.days_past_due, a.status,
                    exists (select 1 from cobranza.contacts c where c.account_id = a.id and c.opt_out) as opted_out,
                    (select count(distinct c.conversation_id) from cobranza.contacts c
                      where c.account_id = a.id and c.""" + _REAL + """) as calls
@@ -133,7 +149,9 @@ async def overview(tenant_id: str, include_tests: bool = Query(False)) -> dict:
 
     return {
         "tenant": dict(tenant),
-        "policy": _plain(policy) if policy else None,
+        "products": products,
+        "policy": policy["policy"] if policy else None,
+        "conversion": _plain(conversion) if conversion else None,
         "customers": customers,
         "plans": plans,
         "conversations": conversations,
@@ -146,8 +164,10 @@ _FIRST = ["Juliana", "Andrea", "Camila", "Valentina", "Diana", "Natalia", "Paola
           "Santiago", "Felipe", "Julián", "Mateo", "Jorge", "Ricardo", "Daniel", "Óscar"]
 _LAST = ["Rodríguez", "Martínez", "García", "López", "Hernández", "Moreno", "Castro", "Rojas",
          "Vargas", "Jiménez", "Muñoz", "Ortiz", "Cárdenas", "Quintero", "Arango", "Salazar"]
-_PRODUCTS = {"avanza": ["Crédito de consumo", "Crédito de libranza"],
-             "nexo": ["Tarjeta de crédito", "Crédito de libre inversión"]}
+_PRODUCTS = {
+    "avanza": ["Tarjeta de crédito", "Crédito de libre inversión", "Crédito de vehículo", "Microcrédito"],
+    "nexo": ["Crédito de libre inversión"],
+}
 
 
 @router.post("/{tenant_id}/customers", status_code=201)

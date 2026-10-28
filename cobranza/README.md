@@ -1,6 +1,8 @@
 # Cobranza responsable · Avanza Crédito
 
-Voice agent on ElevenLabs Agents that handles early-stage collections in Spanish for a fictional Colombian fintech. It verifies identity, offers only the plans the credit policy allows, and sends the payment link over Telegram. Two tenants share one template: **Avanza Crédito** and **Nexo Finanzas**. A WhatsApp Cloud API channel is implemented behind the same adapter but not enabled: it needs a Meta-approved utility template.
+Voice agents on ElevenLabs for fictional Colombian fintech demos. **Banco Avanza** ships five case agents (tarjeta preventiva, libre inversión, vehículo, microcrédito, oferta comercial) on one integration; **Nexo Finanzas** stays a second tenant for isolation. Policy is per product (`product_policies`); contact compliance uses `person_id` and `purpose` (`cobranza` | `comercial`). WhatsApp remains implemented but disabled pending Meta templates.
+
+**Compliance (pending validation):** microcrédito-specific Ley 2300 rules and the commercial do-not-call registry are not automated; the demo applies the general contact window.
 
 This file covers setup and operations. For how the system is split between the client (the fintech's systems), the integration and the agent, see the [root README](../README.md).
 

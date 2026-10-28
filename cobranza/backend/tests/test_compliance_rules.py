@@ -14,8 +14,8 @@ def at(*args) -> datetime:
     return datetime(*args, tzinfo=BOG)
 
 
-def check(now, channel="voice", contacts=(), opted_out=False, in_dispute=False):
-    return evaluate_contact_window(now, channel, HOURS, list(contacts), opted_out, in_dispute)
+def check(now, channel="voice", contacts=(), opted_out=False, in_dispute=False, has_consent=True, purpose="cobranza"):
+    return evaluate_contact_window(now, channel, purpose, HOURS, list(contacts), opted_out, in_dispute, has_consent)
 
 
 def test_weekday_inside_legal_hours_is_allowed():
@@ -44,14 +44,14 @@ def test_sunday_and_holiday_are_blocked():
 
 
 def test_only_one_contact_per_day():
-    contacts = [PastContact(at(2026, 10, 13, 8, 0), "voice")]
+    contacts = [PastContact(at(2026, 10, 13, 8, 0), "voice", "cobranza")]
     allowed, reasons, next_at = check(at(2026, 10, 13, 16, 0), contacts=contacts)
     assert not allowed and reasons == ["already_contacted_today"]
     assert next_at == at(2026, 10, 14, 7, 0)
 
 
 def test_no_second_channel_in_the_same_week():
-    contacts = [PastContact(at(2026, 10, 13, 8, 0), "whatsapp")]
+    contacts = [PastContact(at(2026, 10, 13, 8, 0), "whatsapp", "cobranza")]
     allowed, reasons, next_at = check(at(2026, 10, 15, 10, 0), channel="voice", contacts=contacts)
     assert not allowed and reasons == ["other_channel_used_this_week"]
     assert next_at == at(2026, 10, 19, 7, 0)

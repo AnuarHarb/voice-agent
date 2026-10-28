@@ -1,10 +1,4 @@
-"""Ley 2300 de 2023 ("Dejen de fregar") contact window, checked before any outbound contact.
-
-- Monday to Friday 7 a.m. to 7 p.m., Saturday 8 a.m. to 3 p.m.; never Sundays or holidays.
-- At most one outbound contact per day.
-- No contact through a different channel in the same calendar week.
-- Never after an opt-out; paused while a dispute is open.
-"""
+"""Ley 2300 contact window by purpose (cobranza vs comercial)."""
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -15,12 +9,14 @@ from fastapi import APIRouter, Depends, Query
 
 from app.db import tenant_tx
 from app.fintech_sim.holidays import is_holiday
+from app.fintech_sim.policy import parse_product_policy
 from app.integration.auth import Tenant, ToolError, audit, current_tenant
 from app.integration.schemas import ContactWindowResponse
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
 
 Channel = Literal["voice", "whatsapp", "telegram", "sms", "email"]
+Purpose = Literal["cobranza", "comercial"]
 
 
 @dataclass(frozen=True)
@@ -35,6 +31,7 @@ class Hours:
 class PastContact:
     at: datetime
     channel: str
+    purpose: str
 
 
 def _window(day: date, hours: Hours) -> tuple[time, time] | None:
@@ -52,15 +49,18 @@ def _week_start(day: date) -> date:
 def evaluate_contact_window(
     now: datetime,
     channel: str,
+    purpose: str,
     hours: Hours,
     outbound_contacts: list[PastContact],
     opted_out: bool,
     in_dispute: bool,
+    has_consent: bool,
 ) -> tuple[bool, list[str], datetime | None]:
-    """`now` and contact times must be in the tenant's local timezone."""
+    if not has_consent:
+        return False, ["no_consent"], None
     if opted_out:
         return False, ["customer_opted_out"], None
-    if in_dispute:
+    if in_dispute and purpose == "cobranza":
         return False, ["dispute_open"], None
 
     def violations(at: datetime) -> list[str]:
@@ -70,10 +70,11 @@ def evaluate_contact_window(
             reasons.append("sunday_or_holiday")
         elif not window[0] <= at.time() < window[1]:
             reasons.append("outside_legal_hours")
-        if any(c.at.date() == at.date() for c in outbound_contacts):
+        same_purpose = [c for c in outbound_contacts if c.purpose == purpose]
+        if any(c.at.date() == at.date() for c in same_purpose):
             reasons.append("already_contacted_today")
         if any(_week_start(c.at.date()) == _week_start(at.date()) and c.channel != channel
-               for c in outbound_contacts):
+               for c in same_purpose):
             reasons.append("other_channel_used_this_week")
         return reasons
 
@@ -95,36 +96,58 @@ def evaluate_contact_window(
 
 @router.get("/contact-window", response_model=ContactWindowResponse)
 async def contact_window(
-    account_id: str = Query(min_length=1, max_length=64),
+    person_id: str = Query(min_length=1, max_length=64),
+    purpose: Purpose = Query(default="cobranza"),
     channel: Channel = Query(default="voice"),
     at: datetime | None = Query(default=None, description="ISO datetime to evaluate; defaults to now"),
     tenant: Tenant = Depends(current_tenant),
 ) -> ContactWindowResponse:
     async with tenant_tx(tenant.id) as conn:
-        account = await conn.fetchrow("select status from cobranza.accounts where id = $1", account_id)
-        if account is None:
-            raise ToolError(404, "account_not_found", "Unknown account for this tenant.")
-        policy = await conn.fetchrow("select * from cobranza.tenant_policies")
-        tz = ZoneInfo(policy["timezone"])
+        exists = await conn.fetchval(
+            "select 1 from cobranza.pii_vault where person_token = $1", person_id
+        )
+        if exists is None:
+            raise ToolError(404, "person_not_found", "Unknown person for this tenant.")
+        policy_row = await conn.fetchrow("select policy from cobranza.product_policies limit 1")
+        if policy_row is None:
+            raise ToolError(500, "policy_missing", "Tenant has no credit policy configured.")
+        parsed = parse_product_policy(policy_row["policy"])
+        tz = ZoneInfo(parsed.timezone)
         if at is not None and at.tzinfo is None:
             at = at.replace(tzinfo=tz)
         now = (at or datetime.now(tz)).astimezone(tz)
-        rows = await conn.fetch(
-            """select contacted_at, channel, opt_out, direction from cobranza.contacts
-               where account_id = $1 and (opt_out or contacted_at > $2::timestamptz - interval '8 days')""",
-            account_id, now,
+        has_consent = await conn.fetchval(
+            """select exists(
+                 select 1 from cobranza.contact_consents
+                 where person_token = $1 and purpose = $2 and channel = $3 and revoked_at is null)""",
+            person_id, purpose, channel,
         )
-        hours = Hours(policy["weekday_start_hour"], policy["weekday_end_hour"],
-                      policy["saturday_start_hour"], policy["saturday_end_hour"])
-        outbound = [PastContact(r["contacted_at"].astimezone(tz), r["channel"])
-                    for r in rows if r["direction"] == "outbound"]
+        rows = await conn.fetch(
+            """select c.contacted_at, c.channel, c.opt_out, c.direction, c.purpose
+               from cobranza.contacts c
+               join cobranza.accounts a on a.id = c.account_id
+               where a.person_token = $1
+                 and (c.opt_out or c.contacted_at > $2::timestamptz - interval '8 days')""",
+            person_id, now,
+        )
+        hours = Hours(parsed.weekday_start_hour, parsed.weekday_end_hour,
+                      parsed.saturday_start_hour, parsed.saturday_end_hour)
+        outbound = [
+            PastContact(r["contacted_at"].astimezone(tz), r["channel"], r["purpose"])
+            for r in rows if r["direction"] == "outbound"
+        ]
+        opted_out = any(r["opt_out"] and r["purpose"] == purpose for r in rows)
+        in_dispute = await conn.fetchval(
+            """select exists(select 1 from cobranza.accounts
+               where person_token = $1 and status = 'in_dispute')""",
+            person_id,
+        )
         allowed, reasons, next_at = evaluate_contact_window(
-            now, channel, hours, outbound,
-            opted_out=any(r["opt_out"] for r in rows),
-            in_dispute=account["status"] == "in_dispute",
+            now, channel, purpose, hours, outbound, opted_out, in_dispute, has_consent,
         )
         await audit(tenant.id, None, "contact_window", "allowed" if allowed else "blocked",
-                    {"account_id": account_id, "channel": channel, "reasons": reasons}, conn=conn)
+                    {"person_id": person_id, "purpose": purpose, "channel": channel, "reasons": reasons},
+                    conn=conn)
     return ContactWindowResponse(
         allowed=allowed, channel=channel, evaluated_at=now.isoformat(), reasons=reasons,
         next_allowed_at=next_at.isoformat() if next_at else None,

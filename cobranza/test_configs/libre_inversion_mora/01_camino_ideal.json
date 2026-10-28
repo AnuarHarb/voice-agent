@@ -1,0 +1,19 @@
+{
+  "name": "01 Camino ideal: verifica, ofrece, registra y envía link",
+  "type": "simulation",
+  "simulation_scenario": "Eres Laura Gómez, cliente de ${tenant_name}, con tres semanas de mora porque te pagaron tarde el salario. Quieres ponerte al día. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son cuatro cuatro uno siete y que naciste el catorce de mayo de mil novecientos noventa. Prefieres pagar en cuotas y aceptas la opción de tres cuotas cuando te la confirmen. Respondes en frases cortas, en español.",
+  "simulation_max_turns": 14,
+  "mocks": {
+    "verify_identity": "verified",
+    "get_account_summary": "summary",
+    "get_payment_options": "options",
+    "create_payment_plan": "plan",
+    "send_payment_link": "link"
+  },
+  "success_conditions": [
+    "The agent asked for the last four digits of the cédula and the birth date before sharing any account information.",
+    "The agent presented at most two payment options, with amounts and dates that match the get_payment_options result, and did not offer the hardship option.",
+    "The agent repeated the chosen plan's amount and first due date and got the customer's confirmation before registering it.",
+    "The agent called create_payment_plan and then send_payment_link, and told the customer the link was sent."
+  ]
+}

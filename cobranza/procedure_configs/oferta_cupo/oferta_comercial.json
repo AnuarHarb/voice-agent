@@ -1,0 +1,6 @@
+{
+  "name": "Oferta comercial de cupo",
+  "type": "free_form",
+  "trigger": "Customer agreed to hear the commercial offer after identity is verified.",
+  "content": "Run [tool id=\"${tool:get_credit_offer}\"]. If available is false, explain briefly and offer [procedure id=\"${procedure:escalamiento}\"] or end.\nIf available, present amount_text once. If interested, ask which term from available_terms, then [tool id=\"${tool:simulate_offer}\"] and read spoken_summary verbatim before any OTP.\nIf they accept, [tool id=\"${tool:request_disbursement_otp}\"], collect the code, [tool id=\"${tool:confirm_disbursement}\"].\nIf they decline, respect immediately. If they ask not to be called commercially, [tool id=\"${tool:register_opt_out}\"] with purpose comercial."
+}

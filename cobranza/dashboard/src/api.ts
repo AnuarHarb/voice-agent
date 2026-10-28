@@ -1,6 +1,12 @@
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 
-export type Tenant = { id: string; name: string; channel: string; agent_id: string | null }
+export type Tenant = {
+  id: string
+  name: string
+  channel: string
+  agent_id: string | null
+  agents?: { label: string; agent_id: string }[]
+}
 
 export type Customer = {
   account_id: string
@@ -10,6 +16,7 @@ export type Customer = {
   phone_e164: string | null
   account_last4: string
   product: string
+  product_code: string
   overdue_amount: number
   total_balance: number
   days_past_due: number
@@ -65,18 +72,20 @@ export type Case = {
   created_at: string
 }
 
-export type Policy = {
-  max_installments: number
-  min_installment_cop: number
-  first_payment_max_days: number
-  hardship_enabled: boolean
-  hardship_installments: number
-  hardship_grace_days: number
+export type Product = { product_code: string; kind: string; display_name: string }
+
+export type ConversionStats = {
+  offered: number
+  accepted: number
+  rejected: number
+  disbursed_amount: number
 }
 
 export type Overview = {
   tenant: { id: string; name: string; channel: string }
-  policy: Policy | null
+  products: Product[]
+  policy: Record<string, unknown> | null
+  conversion: ConversionStats | null
   customers: Customer[]
   plans: Plan[]
   conversations: Conversation[]

@@ -1,0 +1,30 @@
+{
+  "tenant_id": "avanza",
+  "tenant_name": "Banco Avanza",
+  "agent_name": "Mateo",
+  "agent_display_name": "Mateo · Oferta comercial de cupo",
+  "agent_label": "oferta_cupo",
+  "product_code": "libre_inversion",
+  "channel": "telegram",
+  "channel_label": "Telegram",
+  "voice_id": "${env:ELEVENLABS_VOICE_ID_NEXO:57D8YIbQSuE3REDPO6Vm}",
+  "llm": "${env:ELEVENLABS_LLM:claude-haiku-4-5}",
+  "tenant_key_env": "TENANT_KEY_AVANZA",
+  "first_message_es": "Hola, soy Mateo, asistente de inteligencia artificial de Banco Avanza. Esta es una llamada comercial y se graba. ¿Tienes un minuto para escuchar una oferta de cupo disponible?",
+  "first_message_en": "Hi, I'm Mateo, Banco Avanza's AI assistant. This is a commercial call and it is recorded. Do you have a minute to hear about an available credit line offer?",
+  "payment_channels": "desembolso a cuenta del banco",
+  "support_hours": "lunes a viernes de 7 a.m. a 7 p.m. y sábados de 8 a.m. a 3 p.m.",
+  "case_tone": "Ofrece una vez, explica bien, no insistas.",
+  "case_goal": "Oferta comercial con consentimiento. Un no cierra. Lee tasa y costo antes del OTP. Nunca digas preaprobado antes de confirm_disbursement.",
+  "tools": ["verify_identity", "get_credit_offer", "simulate_offer", "request_disbursement_otp", "confirm_disbursement", "register_opt_out", "request_callback"],
+  "procedures": [
+    "verificacion_identidad",
+    "resultado_verificacion",
+    "oferta_comercial",
+    "contesta_tercero",
+    "no_contactar",
+    "escalamiento",
+    "escalamiento_falla_tecnica"
+  ],
+  "test_dir": "oferta_cupo"
+}

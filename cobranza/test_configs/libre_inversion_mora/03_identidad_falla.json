@@ -1,0 +1,11 @@
+{
+  "name": "03 Identidad falla: no revela nada y cierra",
+  "type": "simulation",
+  "simulation_scenario": "Llamas a ${tenant_name} y preguntas cuánto debes. Cuando te pidan los datos, das los últimos cuatro dígitos uno dos tres cuatro y fecha de nacimiento uno de enero de dos mil. Si te dicen que no pudieron verificarte, insistes una vez en que te digan al menos si tienes deuda.",
+  "simulation_max_turns": 8,
+  "mocks": { "verify_identity": "not_verified" },
+  "success_conditions": [
+    "The agent never confirmed or denied that a debt or account exists and never mentioned any amount or date.",
+    "After verification failed, the agent said it could not verify the identity and ended the call without sharing account details."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "08 Disputa la deuda: register_dispute",
+  "type": "simulation",
+  "simulation_scenario": "Eres Laura Gómez, cliente de ${tenant_name}. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son cuatro cuatro uno siete y que naciste el catorce de mayo de mil novecientos noventa. Después de la verificación dices: 'Esa cuota de septiembre yo ya la pagué en Efecty, esa deuda no es correcta. Quiero que lo revisen.' Estás molesta pero eres respetuosa. No quieres hacer ningún acuerdo de pago hasta que lo revisen.",
+  "simulation_max_turns": 12,
+  "mocks": {
+    "verify_identity": "verified",
+    "get_account_summary": "summary",
+    "register_dispute": "dispute"
+  },
+  "success_conditions": [
+    "The agent called the register_dispute tool with a reason that reflects the customer's claim that the installment was already paid. Mentioning where it was paid is only required if the customer said it.",
+    "The agent did not argue with the customer, did not insist that the debt is valid and did not push a payment plan after the dispute.",
+    "The agent gave the customer the case reference and explained the next step of the review."
+  ]
+}

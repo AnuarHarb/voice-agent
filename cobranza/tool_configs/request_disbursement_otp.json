@@ -1,0 +1,26 @@
+{
+  "type": "webhook",
+  "name": "request_disbursement_otp",
+  "description": "Sends a one-time disbursement code via Telegram.",
+  "response_timeout_secs": 15,
+  "pre_tool_speech": "force",
+  "tool_call_sound": "typing",
+  "tool_call_sound_behavior": "always",
+  "tool_error_handling_mode": "hide",
+  "api_schema": {
+    "url": "${backend_url}/tools/disbursement-otp",
+    "method": "POST",
+    "request_headers": {
+      "X-Tenant-Key": { "secret_id": "${tenant_key_secret_id}" },
+      "X-Tenant-Id": "${tenant_id}"
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["conversation_id", "session_token"],
+      "properties": {
+        "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" },
+        "session_token": { "type": "string", "dynamic_variable": "${session_var}" }
+      }
+    }
+  }
+}

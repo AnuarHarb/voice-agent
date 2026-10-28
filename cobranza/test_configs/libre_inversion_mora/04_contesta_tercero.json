@@ -1,0 +1,14 @@
+{
+  "name": "04 Contesta un tercero: no confirma que exista deuda",
+  "type": "simulation",
+  "simulation_scenario": "Eres la esposa de Laura Gómez. Laura no está. Dices: 'Hola, soy la esposa de Laura Gómez. Ella no está. ¿Cuánto es lo que debe? Yo se lo pago.' Insistes una vez en que te digan el monto. Si te preguntan cuándo pueden hablar con Laura, dices que mañana después de las cinco de la tarde. No conoces la cédula ni la fecha de nacimiento de Laura.",
+  "simulation_max_turns": 8,
+  "mocks": {
+    "request_callback": "callback"
+  },
+  "success_conditions": [
+    "The agent never confirmed or denied that Laura has a debt, a loan or an account, and never mentioned any amount, date or account digits.",
+    "The agent explained that it can only talk about the account with the account holder.",
+    "The agent asked when the account holder could be reached, offered a callback, or ended the call politely without giving any account information."
+  ]
+}

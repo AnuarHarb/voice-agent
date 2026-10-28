@@ -31,7 +31,33 @@ from referencing import Registry, Resource
 ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / "build"
 STATE_FILE = ROOT / "deploy_state.json"
-TENANTS = ["avanza", "nexo"]
+CASES = [
+    "tarjeta_preventiva",
+    "libre_inversion_mora",
+    "vehiculo_mora",
+    "microcredito",
+    "oferta_cupo",
+]
+TENANTS = CASES + ["nexo"]
+COLLECTION_TOOLS = [
+    "verify_identity",
+    "get_account_summary",
+    "get_payment_options",
+    "create_payment_plan",
+    "send_payment_link",
+    "register_dispute",
+    "register_opt_out",
+    "request_callback",
+]
+COMMERCIAL_TOOLS = [
+    "verify_identity",
+    "get_credit_offer",
+    "simulate_offer",
+    "request_disbursement_otp",
+    "confirm_disbursement",
+    "register_opt_out",
+    "request_callback",
+]
 PLACEHOLDER = re.compile(r"\$\{([^}]+)\}")
 
 
@@ -142,15 +168,33 @@ def _expand(steps: list, extra_procs: dict) -> list:
     return out
 
 
-def load_procedures() -> dict:
+def load_procedures(case_key: str | None = None) -> dict:
     procs, extra = {}, {}
-    for path in sorted((ROOT / "procedure_configs").glob("*.json")):
+    paths: list[Path] = []
+    shared = ROOT / "procedure_configs" / "_shared"
+    if shared.is_dir():
+        paths.extend(sorted(shared.glob("*.json")))
+    if case_key:
+        case_dir = ROOT / "procedure_configs" / case_key
+        if case_dir.is_dir():
+            paths.extend(sorted(case_dir.glob("*.json")))
+    for path in paths:
         spec = read_json(path)
         if spec["type"] == "deterministic":
             spec = {**spec, "steps": _expand(spec["steps"], extra)}
         procs[path.stem] = spec
     procs.update(extra)
     return procs
+
+
+def agent_config_path(tenant: str) -> Path:
+    case = ROOT / "agent_configs" / "cases" / f"{tenant}.json"
+    if case.exists():
+        return case
+    legacy = ROOT / "agent_configs" / f"{tenant}.json"
+    if legacy.exists():
+        return legacy
+    raise SystemExit(f"Unknown agent config for {tenant}")
 
 
 def procedure_order(procs: dict) -> list[str]:
@@ -263,10 +307,22 @@ def test_payload(spec: dict, ctx: dict, mocks: dict) -> dict:
 # ---------------------------------------------------------------------- build
 
 def tenant_context(tenant: str, state: dict, offline: bool) -> dict:
-    cfg = read_json(ROOT / "agent_configs" / f"{tenant}.json")
+    cfg = read_json(agent_config_path(tenant))
     tstate = state.get("tenants", {}).get(tenant, {})
-    tool_names = [p.stem for p in sorted((ROOT / "tool_configs").glob("*.json"))]
-    procs = load_procedures()
+    tool_names = cfg.get("tools") or COLLECTION_TOOLS
+    if tenant == "oferta_cupo":
+        tool_names = cfg.get("tools") or COMMERCIAL_TOOLS
+    procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
+    if tenant == "nexo":
+        procs = load_procedures("libre_inversion_mora")
+    if allowed := cfg.get("procedures"):
+        allowed_set = set(allowed)
+        tool_names_set = set(tool_names)
+        procs = {
+            k: v for k, v in procs.items()
+            if k in allowed_set
+            or (k.startswith("reintento_") and k.removeprefix("reintento_") in tool_names_set)
+        }
 
     def ids(kind, keys):
         saved = tstate.get(kind, {})
@@ -278,6 +334,8 @@ def tenant_context(tenant: str, state: dict, offline: bool) -> dict:
     if not backend_url:
         raise SystemExit("BACKEND_URL is required (public HTTPS URL of the FastAPI backend)")
     ctx.update({
+        "tools": tool_names,
+        "agent_label": cfg.get("agent_label", tenant),
         "session_var": SESSION_VAR,
         "backend_url": backend_url.rstrip("/"),
         "tenant_key_secret_id": tstate.get("secret_id") or ("offline_secret" if offline else None),
@@ -311,13 +369,30 @@ def agent_payload(ctx: dict, state_tenant: dict) -> dict:
 
 
 def build_tenant(tenant: str, state: dict, offline: bool) -> dict:
+    cfg = read_json(agent_config_path(tenant))
     ctx = tenant_context(tenant, state, offline)
     tstate = state.get("tenants", {}).get(tenant, {})
-    tools = {p.stem: render(read_json(p), ctx) for p in sorted((ROOT / "tool_configs").glob("*.json"))}
-    procs = load_procedures()
+    tools = {
+        name: render(read_json(ROOT / "tool_configs" / f"{name}.json"), ctx)
+        for name in ctx.get("tools", COLLECTION_TOOLS)
+    }
+    procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
+    if tenant == "nexo":
+        procs = load_procedures("libre_inversion_mora")
+    if allowed := cfg.get("procedures"):
+        allowed_set = set(allowed)
+        tool_names_set = set(cfg.get("tools") or (COMMERCIAL_TOOLS if tenant == "oferta_cupo" else COLLECTION_TOOLS))
+        procs = {
+            k: v for k, v in procs.items()
+            if k in allowed_set
+            or (k.startswith("reintento_") and k.removeprefix("reintento_") in tool_names_set)
+        }
     mocks = read_json(ROOT / "test_configs" / "_mocks.json")
-    tests = {p.stem: test_payload(read_json(p), ctx, mocks)
-             for p in sorted((ROOT / "test_configs").glob("[0-9]*.json"))}
+    test_dir = cfg.get("test_dir", "libre_inversion_mora" if tenant in ("libre_inversion_mora", "nexo") else tenant)
+    test_paths = sorted((ROOT / "test_configs" / test_dir).glob("*.json")) if (ROOT / "test_configs" / test_dir).is_dir() else []
+    if not test_paths:
+        test_paths = sorted((ROOT / "test_configs").glob("[0-9]*.json"))
+    tests = {p.stem: test_payload(read_json(p), ctx, mocks) for p in test_paths}
     return {
         "ctx": ctx,
         "tools": tools,
@@ -560,7 +635,9 @@ def cmd_push(args) -> int:
         base = f"/v1/convai/agents/{tstate['agent_id']}/branches/{tstate['branch_id']}/procedures"
 
         tstate.setdefault("procedures", {})
-        procs = load_procedures()
+        procs = load_procedures(tenant if tenant in CASES else "libre_inversion_mora")
+        if tenant == "nexo":
+            procs = load_procedures("libre_inversion_mora")
         for key in procedure_order(procs):
             payload = procedure_payload(procs[key], tenant_context(tenant, state, offline=False))
             if tstate["procedures"].get(key):
@@ -573,15 +650,16 @@ def cmd_push(args) -> int:
         api.call("PATCH", f"/v1/convai/agents/{tstate['agent_id']}", params={"branch_id": tstate["branch_id"]},
                  json={"version_description": args.message})
         print(f"[{tenant}] published {tstate['agent_id']}")
-        register_agent(tenant, tstate["agent_id"])
+        ctx_push = tenant_context(tenant, state, offline=False)
+        register_agent(ctx_push["tenant_id"], ctx_push["agent_label"], tstate["agent_id"])
 
     print_links(state)
     return 0
 
 
-def register_agent(tenant: str, agent_id: str) -> None:
-    sql = (f"insert into cobranza.tenant_agents (agent_id, tenant_id, label) values ('{agent_id}', '{tenant}', "
-           f"'production') on conflict (agent_id) do nothing;")
+def register_agent(tenant_id: str, label: str, agent_id: str) -> None:
+    sql = (f"insert into cobranza.tenant_agents (agent_id, tenant_id, label) values ('{agent_id}', '{tenant_id}', "
+           f"'{label}') on conflict (agent_id) do nothing;")
     admin_url = ENV.get("DATABASE_ADMIN_URL")
     if not admin_url:
         print(f"[{tenant}] run this once in Supabase so post-call webhooks map to the tenant:\n  {sql}")
