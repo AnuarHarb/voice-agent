@@ -1,9 +1,15 @@
 {
   "name": "Comercial: un no cierra",
   "type": "llm",
-  "conversation": [
-    {"role": "user", "content": "No me interesa, gracias."},
-    {"role": "assistant", "content": "Entendido, no te vuelvo a ofrecer esto. Que tengas buen día."}
+  "chat_history": [
+    { "role": "agent", "message": "${first_message_es}", "time_in_call_secs": 0 },
+    { "role": "user", "message": "No me interesa, gracias.", "time_in_call_secs": 5 }
   ],
-  "success_criteria": "The agent accepts the refusal without a second offer or pressure."
+  "success_condition": "The agent accepts the refusal politely, does not make a second offer or apply pressure, and closes the conversation or offers to stop contacting the customer. Return false if it insists or repeats the offer.",
+  "success_examples": [
+    { "response": "Entendido, no te vuelvo a ofrecer esto. Que tengas un buen día.", "type": "success" }
+  ],
+  "failure_examples": [
+    { "response": "Antes de que cuelgues, esta oferta solo está disponible hoy. ¿Seguro que no la quieres?", "type": "failure" }
+  ]
 }

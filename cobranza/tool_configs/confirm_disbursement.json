@@ -20,8 +20,8 @@
       "properties": {
         "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" },
         "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
-        "offer_id": { "type": "string" },
-        "otp_code": { "type": "string" }
+        "offer_id": { "type": "string", "description": "offer_id exactly as returned by get_credit_offer." },
+        "otp_code": { "type": "string", "description": "The six-digit code the customer says aloud, as digits." }
       }
     }
   }

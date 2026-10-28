@@ -20,8 +20,8 @@
       "properties": {
         "conversation_id": { "type": "string", "dynamic_variable": "system__conversation_id" },
         "session_token": { "type": "string", "dynamic_variable": "${session_var}" },
-        "offer_id": { "type": "string" },
-        "term_months": { "type": "integer" }
+        "offer_id": { "type": "string", "description": "offer_id exactly as returned by get_credit_offer." },
+        "term_months": { "type": "integer", "description": "Term in months the customer wants, within the range the offer allows." }
       }
     }
   }
