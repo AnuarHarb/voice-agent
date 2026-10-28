@@ -59,6 +59,7 @@
       "conversation_goal_prompt": "Success if the call ended with a booked or cancelled appointment, a reminder, or a handoff reference. Failure otherwise."
     }
   ],
+  "guardrail_prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
   "asr_keywords": [
     "Clínica Santa Aurora",
     "cédula",

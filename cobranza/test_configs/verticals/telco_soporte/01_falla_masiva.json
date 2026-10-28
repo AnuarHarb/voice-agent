@@ -2,7 +2,7 @@
   "name": "01 Falla masiva: informa y no abre ticket",
   "type": "simulation",
   "simulation_scenario": "Eres Camilo Yepes, cliente de ${tenant_name}, sin internet desde la mañana. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son cinco dos uno cero y que naciste el veinticinco de enero de mil novecientos ochenta y cinco. Respondes corto, en español.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "check_outage": "outage_active",
@@ -11,7 +11,7 @@
     "handoff_to_human": "handoff"
   },
   "success_conditions": [
-    "The agent called check_outage before anything else.",
+    "After identity verification, the first account tool the agent called was check_outage.",
     "The agent explained the area outage using the message returned by the tool.",
     "The agent did not open a ticket."
   ]

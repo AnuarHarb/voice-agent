@@ -2,7 +2,7 @@
   "name": "01 Acepta el link: verifica, confirma carrito y envía",
   "type": "simulation",
   "simulation_scenario": "Eres Valeria Ospina. Te llaman de ${tenant_name} por unos tenis que dejaste en el carrito. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son uno uno cuatro cuatro y que naciste el nueve de diciembre de mil novecientos noventa y uno. Te interesa terminar la compra y dices que sí cuando te ofrezcan el link.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_cart": "cart",

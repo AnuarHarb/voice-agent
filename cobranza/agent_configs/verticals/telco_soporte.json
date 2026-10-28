@@ -58,6 +58,7 @@
       "conversation_goal_prompt": "Success if the call ended with an outage explanation, a resolved line or a ticket reference. Failure otherwise."
     }
   ],
+  "guardrail_prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
   "asr_keywords": [
     "Conecta Fibra",
     "cédula",

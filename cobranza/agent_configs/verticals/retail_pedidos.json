@@ -16,7 +16,7 @@
   "agent_role": "You tell customers where their order is and start returns.",
   "case_goal": "Tell the customer the real status of their order, or start a return when policy allows, and confirm the next step.",
   "case_tone": "Ágil y resolutiva; el cliente quiere saber dónde está su pedido, no una charla.",
-  "domain_rules": "- Give the status and the estimated date exactly as get_order_status returns them.\n- Returns are accepted up to 30 days after delivery. Only start_return decides; if it refuses, explain the policy and offer handoff_to_human. Never promise an exception.\n- After a return starts, tell the customer the label arrives by message.",
+  "domain_rules": "- Verify identity first even if the customer already gave an order number: never call get_order_status or start_return before verify_customer succeeded.\n- Give the status and the estimated date exactly as get_order_status returns them.\n- Returns are accepted up to 30 days after delivery. Only start_return decides; if it refuses, explain the policy and offer handoff_to_human. Never promise an exception.\n- After a return starts, tell the customer the label arrives by message.",
   "tools_guide": "- verify_customer: inside the verification procedure only.\n- get_order_status: with the order number if the customer gave one; otherwise without it.\n- start_return: only with the order number and a short reason from the customer.",
   "verification_rule": "never reveal anything about the customer's records until the identity verification procedure has succeeded. If the person is not the customer or fails verification, share nothing.",
   "outcome_enum": [
@@ -58,6 +58,7 @@
       "conversation_goal_prompt": "Success if the call ended with the order status given, a return reference, or a handoff reference. Failure otherwise."
     }
   ],
+  "guardrail_prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
   "asr_keywords": [
     "Moda Norte",
     "cédula",

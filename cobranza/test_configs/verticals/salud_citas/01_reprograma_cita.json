@@ -2,7 +2,7 @@
   "name": "01 Reprograma: verifica, busca cupo y reagenda",
   "type": "simulation",
   "simulation_scenario": "Eres Mariana Londoño, paciente de ${tenant_name}. Tienes una cita de cardiología y quieres cambiarla para el sábado. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son uno seis uno dos y que naciste el diecisiete de febrero de mil novecientos ochenta y nueve. Aceptas el primer horario que te ofrezcan y confirmas. Respondes corto, en español.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_my_appointment": "appt_found",

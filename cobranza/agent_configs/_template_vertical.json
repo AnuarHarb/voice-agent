@@ -164,7 +164,7 @@
             {
               "is_enabled": true,
               "name": "Sin excepciones inventadas",
-              "prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
+              "prompt": "${guardrail_prompt}",
               "execution_mode": "streaming",
               "model": "claude-haiku-4-5",
               "history_message_count": 2,

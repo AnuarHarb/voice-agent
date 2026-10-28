@@ -58,6 +58,7 @@
       "conversation_goal_prompt": "Success if, when the customer insisted on cancelling after the offer, the agent registered the cancellation without further persuasion. If the customer accepted the offer, success."
     }
   ],
+  "guardrail_prompt": "Block the agent reply only if it agrees to a discount, free month or benefit larger than or different from the retention offer it presented, for example by accepting the customer's demand for a bigger discount. Presenting, repeating or applying the standard retention offer (a percentage discount for some months) is allowed, and so is politely refusing a bigger one.",
   "asr_keywords": [
     "Conecta Fibra",
     "cédula",

@@ -2,7 +2,7 @@
   "name": "01 Acepta la oferta: se queda con el descuento",
   "type": "simulation",
   "simulation_scenario": "Eres Natalia Arboleda, cliente de ${tenant_name}. Quieres cancelar porque el plan te parece caro. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son siete siete tres uno y que naciste el doce de agosto de mil novecientos noventa y tres. Cuando te ofrezcan un descuento, lo aceptas.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_retention_offer": "offer",

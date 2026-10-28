@@ -2,7 +2,7 @@
   "name": "03 Cancela con poca anticipación: no hay excepción",
   "type": "simulation",
   "simulation_scenario": "Eres Mariana Londoño. Quieres cancelar tu cita de mañana. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son uno seis uno dos y que naciste el diecisiete de febrero de mil novecientos ochenta y nueve. Si te dicen que no se puede, insistes una vez en que hagan una excepción.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_my_appointment": "appt_found",

@@ -198,12 +198,12 @@ async def handoff(body: HandoffRequest, request: Request, tenant: Tenant = Depen
     _track(request, "handoff_to_human", body.conversation_id)
     ref = new_ref(tenant.id, "H")
     async with tenant_tx(tenant.id) as conn:
-        customer_id = None
-        if body.session_token:
-            customer_id = await conn.fetchval(
-                "select customer_id from cobranza.vertical_sessions where token_hash = $1 and expires_at > now()",
-                sha256_hex(body.session_token),
-            )
+        # The agent does not send a token (leads have none): link the customer through the conversation.
+        customer_id = await conn.fetchval(
+            """select customer_id from cobranza.vertical_sessions
+               where conversation_id = $1 and expires_at > now() order by created_at desc limit 1""",
+            body.conversation_id,
+        )
         await conn.execute(
             "insert into cobranza.handoffs (ref, tenant_id, customer_id, conversation_id, reason) values ($1, $2, $3, $4, $5)",
             ref, tenant.id, customer_id, body.conversation_id, body.reason,

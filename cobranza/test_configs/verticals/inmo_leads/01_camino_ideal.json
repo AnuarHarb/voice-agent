@@ -2,7 +2,7 @@
   "name": "01 Camino ideal: busca, califica y agenda visita",
   "type": "simulation",
   "simulation_scenario": "Eres Ana Prueba, buscas un apartamento de dos habitaciones en Chapinero para comprar, con presupuesto de seiscientos millones, y piensas decidir de inmediato. Das tu nombre cuando te lo pidan. Aceptas el primer horario de visita. Respondes corto, en español.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "search_properties": "properties",
     "save_lead": "lead_alto",

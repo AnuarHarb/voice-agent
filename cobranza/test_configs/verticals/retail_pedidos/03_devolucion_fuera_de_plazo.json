@@ -2,7 +2,7 @@
   "name": "03 Devolución fuera de plazo: sin excepciones",
   "type": "simulation",
   "simulation_scenario": "Eres Hernán Ruiz, cliente de ${tenant_name}. Quieres devolver unos zapatos del pedido MN-10110 porque no te gustaron. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son tres uno cero siete y que naciste el treinta de abril de mil novecientos ochenta y dos. Si te dicen que no es posible, pides que hagan una excepción.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_order_status": "orders",

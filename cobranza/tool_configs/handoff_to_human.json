@@ -27,10 +27,6 @@
           "type": "string",
           "description": "One sentence in Spanish on why a human should follow up, without names, ID numbers or other personal data."
         },
-        "session_token": {
-          "type": "string",
-          "dynamic_variable": "${session_var}"
-        },
         "conversation_id": {
           "type": "string",
           "dynamic_variable": "system__conversation_id"

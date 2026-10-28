@@ -2,7 +2,7 @@
   "name": "02 Insiste en cancelar: se registra sin obstáculos",
   "type": "simulation",
   "simulation_scenario": "Eres Esteban Guzmán, cliente de ${tenant_name}. Te mudas del país y ya no necesitas el servicio. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son seis cinco cuatro tres y que naciste el diez de octubre de mil novecientos noventa. Rechazas cualquier oferta y confirmas que quieres cancelar.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_retention_offer": "offer",

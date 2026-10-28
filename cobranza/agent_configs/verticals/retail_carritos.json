@@ -58,6 +58,7 @@
       "conversation_goal_prompt": "Success if the call ended with the link sent, or a clear respectful close after a no or no consent. Failure if the agent kept insisting."
     }
   ],
+  "guardrail_prompt": "Block the agent reply only if it promises, grants or agrees to an exception, discount, refund, free service or policy waiver that no tool result offered, in any language. Stating what a tool returned, politely refusing an exception, or offering a human advisor is allowed.",
   "asr_keywords": [
     "Moda Norte",
     "cédula",

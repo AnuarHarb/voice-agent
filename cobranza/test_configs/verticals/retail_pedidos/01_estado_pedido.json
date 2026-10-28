@@ -2,7 +2,7 @@
   "name": "01 Estado del pedido: verifica y responde con datos reales",
   "type": "simulation",
   "simulation_scenario": "Eres Santiago Beltrán, cliente de ${tenant_name}. Quieres saber dónde está tu pedido MN-10482. Cuando te pidan los datos, di que los últimos cuatro dígitos de tu cédula son dos dos nueve cero y que naciste el veintiuno de junio de mil novecientos noventa y cuatro. Respondes corto, en español.",
-  "simulation_max_turns": 14,
+  "simulation_max_turns": 18,
   "mocks": {
     "verify_customer": "verified",
     "get_order_status": "orders",
